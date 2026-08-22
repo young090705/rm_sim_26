@@ -58,7 +58,7 @@ class Sim:
         self._base_dt = float(self.m.opt.timestep)
         self._fric_bids = [b for b in
                            (mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, n)
-                            for n in ('fric_up', 'fric_dn')) if b >= 0]
+                            for n in ('fric_left', 'fric_right')) if b >= 0]
         self.reset()
 
     def reset(self):
@@ -111,7 +111,7 @@ class Sim:
             if self.fire_one():
                 print(f'[发射] 存活 {self.pool.alive_count}')
             else:
-                w = abs(self.ctrl.qvel('fric_up_joint'))
+                w = abs(self.ctrl.qvel('fric_left_joint'))
                 print(f'[未发射] 摩擦轮 {w:.0f}/{self.cfg.projectile.fric_speed:.0f} rad/s')
         elif ch == 'B':                     # 连发
             self.firing = not self.firing
@@ -131,7 +131,7 @@ class Sim:
         for j in GIMBAL_JOINTS:
             print(f'  {j:16s} q={math.degrees(self.ctrl.qpos(j)):8.2f}deg '
                   f'v={self.ctrl.qvel(j):7.3f}rad/s')
-        for j in ('fric_up_joint', 'fric_dn_joint'):
+        for j in ('fric_left_joint', 'fric_right_joint'):
             print(f'  {j:16s} w={self.ctrl.qvel(j):8.1f} rad/s')
         print(f'  弹丸存活 {self.pool.alive_count}/{self.pool.n}')
 

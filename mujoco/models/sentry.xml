@@ -180,17 +180,17 @@
             <geom class="visual" type="mesh" mesh="pitch_link__printed" material="printed" quat="0.707107 0.707107 0 0"/>
             <geom class="visual" type="mesh" mesh="pitch_link__referee" material="referee" quat="0.707107 0.707107 0 0"/>
             <geom class="visual" type="mesh" mesh="pitch_link__steel" material="steel" quat="0.707107 0.707107 0 0"/>
-            <site name="muzzle" pos="-0.023 0.1973 -0.0543" quat="0.707107 -0.707107 0 0" size="0.006" rgba="1 0.35 0.1 0.9"/>
-            <site name="chrono" pos="-0.023 0.2573 -0.0543" size="0.009" rgba="0.2 1 0.4 0.35"/>
-            <body name="fric_up" pos="-0.023 0.1873 -0.0164">
-              <inertial pos="0 0 0" mass="0.057" diaginertia="1.78e-05 3.08e-05 1.78e-05"/>
-              <joint name="fric_up_joint" type="hinge" axis="1 0 0" damping="2e-4" armature="4e-05"/>
-              <geom name="fric_up_geom" type="cylinder" size="0.03 0.008" quat="0.707107 0 0.707107 0" material="roller" mass="0.057" condim="4" priority="2" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" contype="2" conaffinity="2"/>
+            <site name="muzzle" pos="-0.005497 0.089703 0.002588" quat="0.731983 -0.681072 0.0185107 0" size="0.006" rgba="1 0.35 0.1 0.9"/>
+            <site name="chrono" pos="-0.0036 0.1595 0.0076" size="0.009" rgba="0.2 1 0.4 0.35"/>
+            <body name="fric_left" pos="-0.0424962 0.0699903 0.00110135">
+              <inertial pos="0 0 0" mass="0.057" diaginertia="1.78e-05 1.78e-05 3.08e-05"/>
+              <joint name="fric_left_joint" type="hinge" axis="0 0 1" damping="2e-4" armature="4e-05"/>
+              <geom name="fric_left_geom" type="cylinder" size="0.028550000000000002 0.008" material="roller" mass="0.057" condim="4" priority="2" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" contype="2" conaffinity="2"/>
             </body>
-            <body name="fric_dn" pos="-0.023 0.1873 -0.0922">
-              <inertial pos="0 0 0" mass="0.057" diaginertia="1.78e-05 3.08e-05 1.78e-05"/>
-              <joint name="fric_dn_joint" type="hinge" axis="1 0 0" damping="2e-4" armature="4e-05"/>
-              <geom name="fric_dn_geom" type="cylinder" size="0.03 0.008" quat="0.707107 0 0.707107 0" material="roller" mass="0.057" condim="4" priority="2" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" contype="2" conaffinity="2"/>
+            <body name="fric_right" pos="0.0303769 0.0680097 0.00110135">
+              <inertial pos="0 0 0" mass="0.057" diaginertia="1.78e-05 1.78e-05 3.08e-05"/>
+              <joint name="fric_right_joint" type="hinge" axis="0 0 1" damping="2e-4" armature="4e-05"/>
+              <geom name="fric_right_geom" type="cylinder" size="0.028550000000000002 0.008" material="roller" mass="0.057" condim="4" priority="2" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" contype="2" conaffinity="2"/>
             </body>
             <camera name="gimbal_cam" pos="-0.0017 0.1395 0.0531" quat="4.32978e-17 4.32978e-17 0.707107 0.707107" fovy="48"/>
             <site name="gimbal_imu" pos="-0.0017 0.0055 0.0306" size="0.008" rgba="1 0.9 0.2 0.7"/>
@@ -359,6 +359,222 @@
     <exclude body1="wheel_rl_link" body2="wheel_rr_link"/>
     <exclude body1="wheel_rl_link" body2="wheel_fr_link"/>
     <exclude body1="wheel_rr_link" body2="wheel_fr_link"/>
+    <exclude body1="proj0" body2="base_link"/>
+    <exclude body1="proj0" body2="gimbal_link"/>
+    <exclude body1="proj0" body2="livox_lidar"/>
+    <exclude body1="proj0" body2="small_yaw_link"/>
+    <exclude body1="proj0" body2="pitch_link"/>
+    <exclude body1="proj0" body2="wheel_fl_link"/>
+    <exclude body1="proj0" body2="wheel_rl_link"/>
+    <exclude body1="proj0" body2="wheel_rr_link"/>
+    <exclude body1="proj0" body2="wheel_fr_link"/>
+    <exclude body1="proj1" body2="base_link"/>
+    <exclude body1="proj1" body2="gimbal_link"/>
+    <exclude body1="proj1" body2="livox_lidar"/>
+    <exclude body1="proj1" body2="small_yaw_link"/>
+    <exclude body1="proj1" body2="pitch_link"/>
+    <exclude body1="proj1" body2="wheel_fl_link"/>
+    <exclude body1="proj1" body2="wheel_rl_link"/>
+    <exclude body1="proj1" body2="wheel_rr_link"/>
+    <exclude body1="proj1" body2="wheel_fr_link"/>
+    <exclude body1="proj2" body2="base_link"/>
+    <exclude body1="proj2" body2="gimbal_link"/>
+    <exclude body1="proj2" body2="livox_lidar"/>
+    <exclude body1="proj2" body2="small_yaw_link"/>
+    <exclude body1="proj2" body2="pitch_link"/>
+    <exclude body1="proj2" body2="wheel_fl_link"/>
+    <exclude body1="proj2" body2="wheel_rl_link"/>
+    <exclude body1="proj2" body2="wheel_rr_link"/>
+    <exclude body1="proj2" body2="wheel_fr_link"/>
+    <exclude body1="proj3" body2="base_link"/>
+    <exclude body1="proj3" body2="gimbal_link"/>
+    <exclude body1="proj3" body2="livox_lidar"/>
+    <exclude body1="proj3" body2="small_yaw_link"/>
+    <exclude body1="proj3" body2="pitch_link"/>
+    <exclude body1="proj3" body2="wheel_fl_link"/>
+    <exclude body1="proj3" body2="wheel_rl_link"/>
+    <exclude body1="proj3" body2="wheel_rr_link"/>
+    <exclude body1="proj3" body2="wheel_fr_link"/>
+    <exclude body1="proj4" body2="base_link"/>
+    <exclude body1="proj4" body2="gimbal_link"/>
+    <exclude body1="proj4" body2="livox_lidar"/>
+    <exclude body1="proj4" body2="small_yaw_link"/>
+    <exclude body1="proj4" body2="pitch_link"/>
+    <exclude body1="proj4" body2="wheel_fl_link"/>
+    <exclude body1="proj4" body2="wheel_rl_link"/>
+    <exclude body1="proj4" body2="wheel_rr_link"/>
+    <exclude body1="proj4" body2="wheel_fr_link"/>
+    <exclude body1="proj5" body2="base_link"/>
+    <exclude body1="proj5" body2="gimbal_link"/>
+    <exclude body1="proj5" body2="livox_lidar"/>
+    <exclude body1="proj5" body2="small_yaw_link"/>
+    <exclude body1="proj5" body2="pitch_link"/>
+    <exclude body1="proj5" body2="wheel_fl_link"/>
+    <exclude body1="proj5" body2="wheel_rl_link"/>
+    <exclude body1="proj5" body2="wheel_rr_link"/>
+    <exclude body1="proj5" body2="wheel_fr_link"/>
+    <exclude body1="proj6" body2="base_link"/>
+    <exclude body1="proj6" body2="gimbal_link"/>
+    <exclude body1="proj6" body2="livox_lidar"/>
+    <exclude body1="proj6" body2="small_yaw_link"/>
+    <exclude body1="proj6" body2="pitch_link"/>
+    <exclude body1="proj6" body2="wheel_fl_link"/>
+    <exclude body1="proj6" body2="wheel_rl_link"/>
+    <exclude body1="proj6" body2="wheel_rr_link"/>
+    <exclude body1="proj6" body2="wheel_fr_link"/>
+    <exclude body1="proj7" body2="base_link"/>
+    <exclude body1="proj7" body2="gimbal_link"/>
+    <exclude body1="proj7" body2="livox_lidar"/>
+    <exclude body1="proj7" body2="small_yaw_link"/>
+    <exclude body1="proj7" body2="pitch_link"/>
+    <exclude body1="proj7" body2="wheel_fl_link"/>
+    <exclude body1="proj7" body2="wheel_rl_link"/>
+    <exclude body1="proj7" body2="wheel_rr_link"/>
+    <exclude body1="proj7" body2="wheel_fr_link"/>
+    <exclude body1="proj8" body2="base_link"/>
+    <exclude body1="proj8" body2="gimbal_link"/>
+    <exclude body1="proj8" body2="livox_lidar"/>
+    <exclude body1="proj8" body2="small_yaw_link"/>
+    <exclude body1="proj8" body2="pitch_link"/>
+    <exclude body1="proj8" body2="wheel_fl_link"/>
+    <exclude body1="proj8" body2="wheel_rl_link"/>
+    <exclude body1="proj8" body2="wheel_rr_link"/>
+    <exclude body1="proj8" body2="wheel_fr_link"/>
+    <exclude body1="proj9" body2="base_link"/>
+    <exclude body1="proj9" body2="gimbal_link"/>
+    <exclude body1="proj9" body2="livox_lidar"/>
+    <exclude body1="proj9" body2="small_yaw_link"/>
+    <exclude body1="proj9" body2="pitch_link"/>
+    <exclude body1="proj9" body2="wheel_fl_link"/>
+    <exclude body1="proj9" body2="wheel_rl_link"/>
+    <exclude body1="proj9" body2="wheel_rr_link"/>
+    <exclude body1="proj9" body2="wheel_fr_link"/>
+    <exclude body1="proj10" body2="base_link"/>
+    <exclude body1="proj10" body2="gimbal_link"/>
+    <exclude body1="proj10" body2="livox_lidar"/>
+    <exclude body1="proj10" body2="small_yaw_link"/>
+    <exclude body1="proj10" body2="pitch_link"/>
+    <exclude body1="proj10" body2="wheel_fl_link"/>
+    <exclude body1="proj10" body2="wheel_rl_link"/>
+    <exclude body1="proj10" body2="wheel_rr_link"/>
+    <exclude body1="proj10" body2="wheel_fr_link"/>
+    <exclude body1="proj11" body2="base_link"/>
+    <exclude body1="proj11" body2="gimbal_link"/>
+    <exclude body1="proj11" body2="livox_lidar"/>
+    <exclude body1="proj11" body2="small_yaw_link"/>
+    <exclude body1="proj11" body2="pitch_link"/>
+    <exclude body1="proj11" body2="wheel_fl_link"/>
+    <exclude body1="proj11" body2="wheel_rl_link"/>
+    <exclude body1="proj11" body2="wheel_rr_link"/>
+    <exclude body1="proj11" body2="wheel_fr_link"/>
+    <exclude body1="proj12" body2="base_link"/>
+    <exclude body1="proj12" body2="gimbal_link"/>
+    <exclude body1="proj12" body2="livox_lidar"/>
+    <exclude body1="proj12" body2="small_yaw_link"/>
+    <exclude body1="proj12" body2="pitch_link"/>
+    <exclude body1="proj12" body2="wheel_fl_link"/>
+    <exclude body1="proj12" body2="wheel_rl_link"/>
+    <exclude body1="proj12" body2="wheel_rr_link"/>
+    <exclude body1="proj12" body2="wheel_fr_link"/>
+    <exclude body1="proj13" body2="base_link"/>
+    <exclude body1="proj13" body2="gimbal_link"/>
+    <exclude body1="proj13" body2="livox_lidar"/>
+    <exclude body1="proj13" body2="small_yaw_link"/>
+    <exclude body1="proj13" body2="pitch_link"/>
+    <exclude body1="proj13" body2="wheel_fl_link"/>
+    <exclude body1="proj13" body2="wheel_rl_link"/>
+    <exclude body1="proj13" body2="wheel_rr_link"/>
+    <exclude body1="proj13" body2="wheel_fr_link"/>
+    <exclude body1="proj14" body2="base_link"/>
+    <exclude body1="proj14" body2="gimbal_link"/>
+    <exclude body1="proj14" body2="livox_lidar"/>
+    <exclude body1="proj14" body2="small_yaw_link"/>
+    <exclude body1="proj14" body2="pitch_link"/>
+    <exclude body1="proj14" body2="wheel_fl_link"/>
+    <exclude body1="proj14" body2="wheel_rl_link"/>
+    <exclude body1="proj14" body2="wheel_rr_link"/>
+    <exclude body1="proj14" body2="wheel_fr_link"/>
+    <exclude body1="proj15" body2="base_link"/>
+    <exclude body1="proj15" body2="gimbal_link"/>
+    <exclude body1="proj15" body2="livox_lidar"/>
+    <exclude body1="proj15" body2="small_yaw_link"/>
+    <exclude body1="proj15" body2="pitch_link"/>
+    <exclude body1="proj15" body2="wheel_fl_link"/>
+    <exclude body1="proj15" body2="wheel_rl_link"/>
+    <exclude body1="proj15" body2="wheel_rr_link"/>
+    <exclude body1="proj15" body2="wheel_fr_link"/>
+    <exclude body1="proj16" body2="base_link"/>
+    <exclude body1="proj16" body2="gimbal_link"/>
+    <exclude body1="proj16" body2="livox_lidar"/>
+    <exclude body1="proj16" body2="small_yaw_link"/>
+    <exclude body1="proj16" body2="pitch_link"/>
+    <exclude body1="proj16" body2="wheel_fl_link"/>
+    <exclude body1="proj16" body2="wheel_rl_link"/>
+    <exclude body1="proj16" body2="wheel_rr_link"/>
+    <exclude body1="proj16" body2="wheel_fr_link"/>
+    <exclude body1="proj17" body2="base_link"/>
+    <exclude body1="proj17" body2="gimbal_link"/>
+    <exclude body1="proj17" body2="livox_lidar"/>
+    <exclude body1="proj17" body2="small_yaw_link"/>
+    <exclude body1="proj17" body2="pitch_link"/>
+    <exclude body1="proj17" body2="wheel_fl_link"/>
+    <exclude body1="proj17" body2="wheel_rl_link"/>
+    <exclude body1="proj17" body2="wheel_rr_link"/>
+    <exclude body1="proj17" body2="wheel_fr_link"/>
+    <exclude body1="proj18" body2="base_link"/>
+    <exclude body1="proj18" body2="gimbal_link"/>
+    <exclude body1="proj18" body2="livox_lidar"/>
+    <exclude body1="proj18" body2="small_yaw_link"/>
+    <exclude body1="proj18" body2="pitch_link"/>
+    <exclude body1="proj18" body2="wheel_fl_link"/>
+    <exclude body1="proj18" body2="wheel_rl_link"/>
+    <exclude body1="proj18" body2="wheel_rr_link"/>
+    <exclude body1="proj18" body2="wheel_fr_link"/>
+    <exclude body1="proj19" body2="base_link"/>
+    <exclude body1="proj19" body2="gimbal_link"/>
+    <exclude body1="proj19" body2="livox_lidar"/>
+    <exclude body1="proj19" body2="small_yaw_link"/>
+    <exclude body1="proj19" body2="pitch_link"/>
+    <exclude body1="proj19" body2="wheel_fl_link"/>
+    <exclude body1="proj19" body2="wheel_rl_link"/>
+    <exclude body1="proj19" body2="wheel_rr_link"/>
+    <exclude body1="proj19" body2="wheel_fr_link"/>
+    <exclude body1="proj20" body2="base_link"/>
+    <exclude body1="proj20" body2="gimbal_link"/>
+    <exclude body1="proj20" body2="livox_lidar"/>
+    <exclude body1="proj20" body2="small_yaw_link"/>
+    <exclude body1="proj20" body2="pitch_link"/>
+    <exclude body1="proj20" body2="wheel_fl_link"/>
+    <exclude body1="proj20" body2="wheel_rl_link"/>
+    <exclude body1="proj20" body2="wheel_rr_link"/>
+    <exclude body1="proj20" body2="wheel_fr_link"/>
+    <exclude body1="proj21" body2="base_link"/>
+    <exclude body1="proj21" body2="gimbal_link"/>
+    <exclude body1="proj21" body2="livox_lidar"/>
+    <exclude body1="proj21" body2="small_yaw_link"/>
+    <exclude body1="proj21" body2="pitch_link"/>
+    <exclude body1="proj21" body2="wheel_fl_link"/>
+    <exclude body1="proj21" body2="wheel_rl_link"/>
+    <exclude body1="proj21" body2="wheel_rr_link"/>
+    <exclude body1="proj21" body2="wheel_fr_link"/>
+    <exclude body1="proj22" body2="base_link"/>
+    <exclude body1="proj22" body2="gimbal_link"/>
+    <exclude body1="proj22" body2="livox_lidar"/>
+    <exclude body1="proj22" body2="small_yaw_link"/>
+    <exclude body1="proj22" body2="pitch_link"/>
+    <exclude body1="proj22" body2="wheel_fl_link"/>
+    <exclude body1="proj22" body2="wheel_rl_link"/>
+    <exclude body1="proj22" body2="wheel_rr_link"/>
+    <exclude body1="proj22" body2="wheel_fr_link"/>
+    <exclude body1="proj23" body2="base_link"/>
+    <exclude body1="proj23" body2="gimbal_link"/>
+    <exclude body1="proj23" body2="livox_lidar"/>
+    <exclude body1="proj23" body2="small_yaw_link"/>
+    <exclude body1="proj23" body2="pitch_link"/>
+    <exclude body1="proj23" body2="wheel_fl_link"/>
+    <exclude body1="proj23" body2="wheel_rl_link"/>
+    <exclude body1="proj23" body2="wheel_rr_link"/>
+    <exclude body1="proj23" body2="wheel_fr_link"/>
   </contact>
   <actuator>
     <motor name="big_yaw_joint_trq" joint="big_yaw_joint" gear="1" ctrlrange="-12.0 12.0"/>
@@ -368,8 +584,8 @@
     <motor name="wheel_rl_joint_trq" joint="wheel_rl_joint" gear="1" ctrlrange="-6 6"/>
     <motor name="wheel_rr_joint_trq" joint="wheel_rr_joint" gear="1" ctrlrange="-6 6"/>
     <motor name="wheel_fr_joint_trq" joint="wheel_fr_joint" gear="1" ctrlrange="-6 6"/>
-    <velocity name="fric_up_joint_vel" joint="fric_up_joint" kv="0.05" ctrlrange="-1400 1400"/>
-    <velocity name="fric_dn_joint_vel" joint="fric_dn_joint" kv="0.05" ctrlrange="-1400 1400"/>
+    <velocity name="fric_left_joint_vel" joint="fric_left_joint" kv="0.05" ctrlrange="-1400 1400"/>
+    <velocity name="fric_right_joint_vel" joint="fric_right_joint" kv="0.05" ctrlrange="-1400 1400"/>
   </actuator>
   <sensor>
     <jointpos name="big_yaw_joint_pos" joint="big_yaw_joint"/>
@@ -393,7 +609,7 @@
     <gyro name="imu_gyro" site="gimbal_imu"/>
     <accelerometer name="imu_acc" site="gimbal_imu"/>
     <framepos name="muzzle_pos" objtype="site" objname="muzzle"/>
-    <jointvel name="fric_up_joint_vel" joint="fric_up_joint"/>
-    <jointvel name="fric_dn_joint_vel" joint="fric_dn_joint"/>
+    <jointvel name="fric_left_joint_vel" joint="fric_left_joint"/>
+    <jointvel name="fric_right_joint_vel" joint="fric_right_joint"/>
   </sensor>
 </mujoco>

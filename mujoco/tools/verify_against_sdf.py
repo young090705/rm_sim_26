@@ -40,7 +40,7 @@ def sdf_values():
 # MJCF 独有、源 SDF 中不存在的 body。摩擦轮在 CAD 总装里没被插入(零件文件有,
 # 装配体没引用), 但真车确实装了, 所以 MJCF 里建了 —— 比对时临时移除, 否则
 # pitch 惯量会因这 114 g 差出 30%, 掩盖真正的转换错误。
-MJCF_ONLY_BODIES = ('fric_up', 'fric_dn')
+MJCF_ONLY_BODIES = ('fric_left', 'fric_right')
 
 
 def load_comparable(path: str) -> mujoco.MjModel:

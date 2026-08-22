@@ -8,9 +8,12 @@ import numpy as np
 
 GIMBAL_JOINTS = ('big_yaw_joint', 'small_yaw_joint', 'pitch_joint')
 WHEEL_JOINTS = ('wheel_fl_joint', 'wheel_rl_joint', 'wheel_rr_joint', 'wheel_fr_joint')
-FRIC_JOINTS = ('fric_up_joint', 'fric_dn_joint')
-# 上轮正转、下轮反转, 两者接触面才都朝 +Y(前方)
-FRIC_SIGN = {'fric_up_joint': +1.0, 'fric_dn_joint': -1.0}
+FRIC_JOINTS = ('fric_left_joint', 'fric_right_joint')
+# 轴竖直(+Z)、左右夹持, 膛线沿 +Y。左轮在 -X 侧, 其接触点在 +X 面, 该点线速度
+#   v = ω·ẑ × R·x̂ = ωR·ŷ
+# 故左轮需 ω>0 才把弹丸推向 +Y; 右轮在 +X 侧、接触点在 -X 面, 需 ω<0。
+# 符号取反的话两轮一起把弹丸往回推 —— 实测弹丸前进到距轮心 7mm 处原地反弹。
+FRIC_SIGN = {'fric_left_joint': +1.0, 'fric_right_joint': -1.0}
 # 轮位角, 与 scripts/omni_drive.py 保持一致
 WHEEL_ANGLE = (math.radians(45), math.radians(135), math.radians(-135), math.radians(-45))
 WHEEL_SIGN = -1.0

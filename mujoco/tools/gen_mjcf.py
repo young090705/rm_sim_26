@@ -122,6 +122,28 @@ def resolve(links, joints, key, kind, cache):
     return out
 
 
+def quat_z_to(target):
+    """返回把本体 +Z 转到 target 方向的四元数.
+
+    枪口 site 的 +Z 就是发射方向, 必须与实测膛线轴严格对齐。早先用
+    rpy(-90°,0,0) 得到的是纯 +Y, 而真实膛线是 (0.027, 0.997, 0.072) ——
+    从送弹点到摩擦轮 45mm 上累积偏差 3.4mm, 超过夹持余量, 弹丸直接从
+    轮子旁边溜过去, 加大压缩量也没用。
+    """
+    t = np.asarray(target, dtype=float)
+    t = t / np.linalg.norm(t)
+    z = np.array([0.0, 0.0, 1.0])
+    d = float(z @ t)
+    if d > 1 - 1e-12:
+        return np.array([1.0, 0.0, 0.0, 0.0])
+    if d < -1 + 1e-12:
+        return np.array([0.0, 1.0, 0.0, 0.0])
+    v = np.cross(z, t)
+    w = 1.0 + d
+    q = np.array([w, v[0], v[1], v[2]])
+    return q / np.linalg.norm(q)
+
+
 def mat_to_quat(R):
     tr = R.trace()
     if tr > 0:
@@ -350,29 +372,29 @@ def build():
     # 位置估错的话弹道看起来会从模块旁边飞出去。
     ET.SubElement(pitch, 'site', name='muzzle',
                   pos=fmt(MUZZLE_POS),
-                  quat=fmt(rpy_to_quat(-np.pi / 2, 0, 0)),
+                  quat=fmt(quat_z_to(CHRONO_AXIS)),
                   size='0.006', rgba='1 0.35 0.1 0.9')
     # 测速模块中心, 便于可视化确认弹道确实穿过它
     ET.SubElement(pitch, 'site', name='chrono', pos=fmt(CHRONO_POS),
                   size='0.009', rgba='0.2 1 0.4 0.35')
 
     # ---------- 摩擦轮 ----------
-    # 上下两轮夹住弹丸靠摩擦加速, 与真车一致 —— 初速不是设定值, 而是轮速的结果。
-    # 尺寸取自 CAD: 摩擦轮 57 g, ρ=1602(聚氨酯), 由惯量反推半径约 30 mm。
-    # 轮轴沿 pitch 系 X(垂直于膛线且水平)。上轮 ω>0、下轮 ω<0 时接触面均向 +Y,
-    # 即把弹丸向前推。
-    for name, sgn in (('fric_up', +1), ('fric_dn', -1)):
-        c = CHRONO_POS + np.array([0.0, 0.0, sgn * (FRIC_GAP / 2 + FRIC_R)])
-        c = c - CHRONO_AXIS * FRIC_BACK
+    # 位置与朝向来自 CAD 实测, 不是照常见布局猜的:
+    #   3508安装板(发射) 是一块水平薄板(5mm), 法向沿 pitch 系 Z, 上面有两个
+    #   Ø26.4mm 电机孔, 左右对称跨在膛线两侧, 轴心间距 72.9mm。
+    #   => 电机轴竖直, 两轮【左右并排】夹住弹丸, 不是上下叠放。
+    # 孔心(pitch系 ROS): 左 (-38.2, 69.0, 26.1)  右 (+34.7, 69.0, 26.1) mm
+    left_c, right_c = _fric_centers()
+    for name, c in (('fric_left', left_c), ('fric_right', right_c)):
         wb = ET.SubElement(pitch, 'body', name=name, pos=fmt(c))
         ET.SubElement(wb, 'inertial', pos='0 0 0', mass=f'{FRIC_MASS}',
-                      diaginertia=fmt([1.78e-5, 3.08e-5, 1.78e-5]))
+                      diaginertia=fmt([1.78e-5, 1.78e-5, 3.08e-5]))
         ET.SubElement(wb, 'joint', name=f'{name}_joint', type='hinge',
-                      axis='1 0 0', damping='2e-4', armature=str(FRIC_ARMATURE))
-        # 轮子朝向: 圆柱默认沿 Z, 绕 Y 转 90° 使其轴向沿 X
+                      axis=fmt(FRIC_AXIS), damping='2e-4',
+                      armature=str(FRIC_ARMATURE))
+        # 圆柱默认轴向沿 Z, 与电机轴一致, 无需再转
         gv = ET.SubElement(wb, 'geom', name=f'{name}_geom', type='cylinder',
                            size=f'{FRIC_R} {FRIC_W / 2}',
-                           quat=fmt(rpy_to_quat(0, np.pi / 2, 0)),
                            material='roller', mass=f'{FRIC_MASS}',
                            condim='4', priority='2',
                            friction='2.2 0.01 0.0005',
@@ -421,6 +443,12 @@ def build():
     for i, b1 in enumerate(ROBOT_BODIES):
         for b2 in ROBOT_BODIES[i + 1:]:
             ET.SubElement(contact, 'exclude', body1=b1, body2=b2)
+    # 弹丸也要排除机体的粗碰撞包络: 枪口位于云台包络圆柱(r=0.26)内部, 不排除的话
+    # 弹丸一生成就被这个非实体的包络弹飞, 根本到不了摩擦轮(实测 67 次接触,
+    # 弹丸被推到离膛线轴 106mm 处)。摩擦轮不在此列, 仍正常夹持加速。
+    for i in range(N_PROJECTILE):
+        for b in ROBOT_BODIES:
+            ET.SubElement(contact, 'exclude', body1=f'proj{i}', body2=b)
 
     # ---------- 执行器 ----------
     act = ET.SubElement(root, 'actuator')
@@ -433,7 +461,7 @@ def build():
         ET.SubElement(act, 'motor', name=f'{w}_trq', joint=w,
                       gear='1', ctrlrange='-6 6')
     # 摩擦轮用速度伺服: 真车是电调闭环控转速, 这里同构
-    for w in ('fric_up_joint', 'fric_dn_joint'):
+    for w in ('fric_left_joint', 'fric_right_joint'):
         ET.SubElement(act, 'velocity', name=f'{w}_vel', joint=w,
                       kv='0.05', ctrlrange='-1400 1400')
 
@@ -449,7 +477,7 @@ def build():
     ET.SubElement(sen, 'gyro', name='imu_gyro', site='gimbal_imu')
     ET.SubElement(sen, 'accelerometer', name='imu_acc', site='gimbal_imu')
     ET.SubElement(sen, 'framepos', name='muzzle_pos', objtype='site', objname='muzzle')
-    for w in ('fric_up_joint', 'fric_dn_joint'):
+    for w in ('fric_left_joint', 'fric_right_joint'):
         ET.SubElement(sen, 'jointvel', name=f'{w}_vel', joint=w)
 
     xml = minidom.parseString(ET.tostring(root, 'utf-8')).toprettyxml(indent='  ')
@@ -467,17 +495,36 @@ ARMATURE_WHEEL = 0.002
 # RM18 裁判系统测速模块在 pitch_link 系的中心 (CAD 实测, ROS 米制)。
 # 弹丸必须沿该模块的中心线穿过 —— 真车靠它测初速, 位置或方向偏了都不对。
 # 模块本体 Z 轴在 pitch 系映射为 (0,-1,0), 故中心线沿 ±Y, 发射方向为 +Y。
-CHRONO_POS = np.array([-0.0230, 0.2573, -0.0543])
-CHRONO_AXIS = np.array([0.0, 1.0, 0.0])
-# 枪口置于中心线上、模块后方 60mm, 使弹丸自后向前贯穿模块
-MUZZLE_POS = CHRONO_POS - CHRONO_AXIS * 0.060
+# 由 pitch_link 网格实测: 取测速模块全部顶点的质心与主轴。
+# 早先用单个子零件的装配变换算, 结果偏了 117 mm, 标记点直接落在模型外。
+CHRONO_POS = np.array([-0.0036, 0.1595, 0.0076])
+CHRONO_AXIS = np.array([0.0271, 0.9971, 0.0716])
+# 枪口置于膛线上、摩擦轮之后。摩擦轮沿膛线在 -89mm 处, 枪口取 -70mm(轮出口侧)
+MUZZLE_POS = CHRONO_POS - CHRONO_AXIS * 0.070
 
-# 摩擦轮 (CAD: 57 g, ρ=1602 聚氨酯; 由惯量反推半径 ~30 mm, 与常见 60 mm 轮一致)
-FRIC_R = 0.030            # 轮半径 m
+# 摩擦轮 (CAD: 57 g, ρ=1602 聚氨酯)
+# 安装位置由 3508安装板(发射) 上的两个电机孔实测得到, 见下方注释。
+FRIC_AXIS = np.array([0.0, 0.0, 1.0])              # 轴竖直 (板面法向)
+FRIC_Y = 0.0690           # 轮心沿膛线的位置 (孔心实测)
+FRIC_SPAN = 0.0729        # 两轮轴心间距 (孔心实测)
+FRIC_GAP = 0.0158         # 夹持间隙, 弹丸压缩约 1.2 mm
+FRIC_R = (FRIC_SPAN - FRIC_GAP) / 2               # = 28.6 mm
+
+
+def _fric_centers():
+    """两轮心: 沿膛线取孔心的轴向位置, 横向按实测间距对称跨在膛线两侧.
+
+    孔心只定了电机轴在水平面内的位置 —— 轴是竖直的, 轮子在轴上的高度自由。
+    直接照搬板面高度(26.1mm)会让膛线从两轮下方 25mm 处穿过, 弹丸只蹭到一侧,
+    实测弹速掉到 6.6 m/s(效率 27%)。所以轮心必须落在膛线上。
+    """
+    t = (FRIC_Y - CHRONO_POS[1]) / CHRONO_AXIS[1]
+    on_bore = CHRONO_POS + CHRONO_AXIS * t
+    lateral = np.cross(CHRONO_AXIS, FRIC_AXIS)
+    lateral = lateral / np.linalg.norm(lateral)
+    return on_bore - lateral * FRIC_SPAN / 2, on_bore + lateral * FRIC_SPAN / 2
 FRIC_W = 0.016            # 轮宽 m
 FRIC_MASS = 0.057
-FRIC_GAP = 0.0158         # 上下轮间隙, 略小于弹丸直径 17 mm -> 压缩约 1.2 mm
-FRIC_BACK = 0.070         # 轮心相对测速模块中心后移量 m
 FRIC_ARMATURE = 4.0e-5    # 3508 转子折算惯量, 待辨识
 
 N_PROJECTILE = 24
