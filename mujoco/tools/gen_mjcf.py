@@ -189,6 +189,14 @@ def build():
     links, joints = load_sdf()
     cache = {}
     manifest = json.load(open(os.path.join(ASSETS, 'manifest.json'), encoding='utf-8'))
+    # 弹仓腔壁 (tools/gen_mag_collision.py 生成)。缺文件不算错 —— 退回近似圆桶,
+    # 只是容量会偏小, 会在末尾提示。
+    magcol_path = os.path.join(ASSETS, 'magcol.json')
+    magdata = (json.load(open(magcol_path, encoding='utf-8'))
+               if os.path.exists(magcol_path) else {})
+    magcol = magdata.get('meshes', [])
+    mag_seeds = magdata.get('seeds', [])
+    mag_capacity = int(magdata.get('capacity', MAG_CAPACITY))
 
     root = ET.Element('mujoco', model='sentry')
     ET.SubElement(root, 'compiler', angle='radian', autolimits='true',
@@ -241,6 +249,8 @@ def build():
                 continue
             seen.add(mesh_name)
             ET.SubElement(asset, 'mesh', name=mesh_name, file=e['file'])
+    for e in magcol:
+        ET.SubElement(asset, 'mesh', name=e['file'][:-4], file=e['file'])
 
     # 嵌套 default: 辨识时改一个 class 即可扫过同类全部关节, 不必逐个 joint 改。
     # group 约定: 1=visual  2=collision  3=site
@@ -368,24 +378,25 @@ def build():
     ET.SubElement(hop, 'inertial', pos=fmt(FEEDER_POS), mass='0.12',
                   diaginertia='4e-4 4e-4 6e-4')
 
-    # 斗底: 中心开孔让弹丸落到拨弹盘上, 用一圈盒子近似圆环
-    for i in range(12):
-        a = 2 * np.pi * i / 12
-        rr = FEEDER_R + 0.018
-        g = ET.SubElement(hop, 'geom', name=f'hopper_floor{i}', type='box',
-                          size='0.020 0.020 0.004',
-                          pos=fmt([fx + rr * np.cos(a), fy + rr * np.sin(a), fz - 0.006]),
-                          quat=fmt(rpy_to_quat(0, 0, a)), material='printed')
+    # 腔壁: 直接用 CAD 零件的凸包(tools/gen_mag_collision.py 生成)。
+    # 曾经这里是手搓的 ⌀150x90mm 圆桶, 结果容量算成 84 发, 差了近一个数量级 ——
+    # 真实腔体由 101 个零件围成, 形状根本不是圆桶。网格已在 gimbal_link 坐标系,
+    # 所以 hopper body 的 pos 是 0。
+    n_wall = 0
+    for i, e in enumerate(magcol):
+        g = ET.SubElement(hop, 'geom', name=f'magwall{i}', type='mesh',
+                          mesh=e['file'][:-4], material='printed')
         g.set('contype', '4'); g.set('conaffinity', '4'); g.set('group', '3')
-    # 斗壁
-    for i in range(16):
-        a = 2 * np.pi * i / 16
-        g = ET.SubElement(hop, 'geom', name=f'hopper_wall{i}', type='box',
-                          size='0.003 0.016 ' + f'{HOPPER_H / 2:.4f}',
-                          pos=fmt([fx + HOPPER_R * np.cos(a), fy + HOPPER_R * np.sin(a),
-                                   fz + HOPPER_H / 2]),
-                          quat=fmt(rpy_to_quat(0, 0, a)), material='printed')
-        g.set('contype', '4'); g.set('conaffinity', '4'); g.set('group', '3')
+        n_wall += 1
+    if n_wall == 0:                       # 没生成腔壁就退回圆桶, 至少别漏弹
+        for i in range(16):
+            a = 2 * np.pi * i / 16
+            g = ET.SubElement(hop, 'geom', name=f'hopper_wall{i}', type='box',
+                              size='0.003 0.016 ' + f'{HOPPER_H / 2:.4f}',
+                              pos=fmt([fx + HOPPER_R * np.cos(a),
+                                       fy + HOPPER_R * np.sin(a), fz + HOPPER_H / 2]),
+                              quat=fmt(rpy_to_quat(0, 0, a)), material='printed')
+            g.set('contype', '4'); g.set('conaffinity', '4'); g.set('group', '3')
 
     # 拨弹盘: 轮毂 + N 个径向拨齿, 绕竖直轴, 2006 电机驱动
     fb = ET.SubElement(gim, 'body', name='feeder', pos=fmt(FEEDER_POS))
@@ -482,6 +493,21 @@ def build():
         # 一发射就随弹丸进入场景, 阴影贴图被挤爆, 地面整片变白, 再发一发又恢复。
         # 荧光观感靠材质的 emission=0.85 就够, 不需要真光源。
 
+    # ---------- 弹药账目 ----------
+    # 写进 <custom> 而不是 Python 常量: 模型自包含, MJX 批量仿真和外部工具读同一份。
+    # mag_capacity 是实测的自然堆积容量; mag_seed 是实体弹丸的初始堆放位置
+    # (取自同一次实测的沉降结果, 离拨弹盘最近的那些点)。
+    custom = ET.SubElement(root, 'custom')
+    ET.SubElement(custom, 'numeric', name='mag_capacity', data=str(mag_capacity))
+    if mag_seeds:
+        flat = ' '.join(f'{v:.5f}' for p in mag_seeds[:N_PROJECTILE] for v in p)
+        ET.SubElement(custom, 'numeric', name='mag_seed', data=flat)
+    if magdata.get('cavity_lo'):
+        # 腔体范围(gimbal_link 系), 用来判断仓内弹丸是否漏出去了
+        ET.SubElement(custom, 'numeric', name='mag_cavity',
+                      data=' '.join(f'{v:.5f}' for v in
+                                    magdata['cavity_lo'] + magdata['cavity_hi']))
+
     # ---------- 相机 ----------
     ET.SubElement(world, 'camera', name='track_chase', mode='trackcom',
                   pos='-1.6 -1.6 1.15', xyaxes='0.707 -0.707 0 0.3 0.3 0.9')
@@ -508,6 +534,9 @@ def build():
     for i in range(N_PROJECTILE):
         for b in ROBOT_BODIES:
             ET.SubElement(contact, 'exclude', body1=f'proj{i}', body2=b)
+    # 弹仓腔壁与拨弹盘互不碰撞: 出弹导轨、2006 安装座就贴在盘边上(轴心 7mm 处),
+    # 真车靠轴承和间隙转得动, 建模成接触只会把拨弹盘卡死。两者仍各自与弹丸碰撞。
+    ET.SubElement(contact, 'exclude', body1='hopper', body2='feeder')
 
     # ---------- 执行器 ----------
     act = ET.SubElement(root, 'actuator')
@@ -597,10 +626,22 @@ FEEDER_POS = np.array([-0.0229, -0.0277, 0.0563])
 FEEDER_R = 0.052          # 盘半径 (包围盒 103~110mm)
 FEEDER_PADDLES = 8        # 拨齿数
 FEEDER_PADDLE_H = 0.011   # 拨齿高度, 略低于弹丸直径以便单发拨出
-HOPPER_R = 0.075          # 弹仓斗内半径
-HOPPER_H = 0.090          # 斗高
+HOPPER_R = 0.075          # 仅在缺 magcol.json 时兜底用的近似圆桶内半径
+HOPPER_H = 0.090          # 同上
 N_MAGAZINE = 20           # 预装弹丸数
 
+# 弹仓自然堆积容量, 实测值。tools/measure_mag_capacity.py 复现:
+#   云台层 155 个零件全部做碰撞体 -> 18mm 格点找出 2787 个不与结构干涉的位置
+#   -> 全部生成弹丸只加重力沉降 -> 仓内 711 发, 6 秒后不再变化
+#   -> 从仓顶再补灌 784 发 -> 714 发, 即已饱和 (三次重复 711/712/714)
+# 别拿包围盒体积估: 弹仓 AABB 有 27.2 L, 按堆积率能算出五千发, 但那个盒子里
+# 塞满了 NUC、C 板、云台支撑, 真实空腔只是其中一小块。
+MAG_CAPACITY = 712
+
+# 物理弹丸池大小。实测步进代价(见上述工具的性能测量):
+#   90 发在仓内 -> 1.16x 实时;  300 发 -> 0.09x;  712 发 -> 0.11x
+# 所以整仓 712 发不可能全用刚体。池子只覆盖拨弹盘附近的实体弹丸, 其余走
+# ProjectilePool 的储备计数 —— 弹药账目仍是 712 发。
 N_PROJECTILE = 90
 PROJ_RADIUS = 0.0085      # 17mm 弹丸
 PROJ_MASS = 0.0032        # 官方 17mm 弹丸 3.2 g

@@ -11,7 +11,7 @@
   7            发射一发
   8            连发开关
   9            摩擦轮启停
-  .            一键装满弹仓
+  .            一键满弹 (装到实测的弹仓自然容量 712 发)
   -            复位
   =            打印状态(位姿、关节角、轮速、弹仓)
 """
@@ -80,13 +80,14 @@ class Sim:
     def _mag_center(self):
         return self.d.xpos[self._feeder_bid].copy()
 
-    def reload(self) -> int:
-        """一键装满弹仓"""
+    def reload(self) -> tuple[int, int]:
+        """一键装满弹仓, 返回 (实体发数, 总弹药数)"""
         mujoco.mj_forward(self.m, self.d)
-        return self.pool.load_magazine(self._mag_center(), 0.075, rng=self.rng)
+        return self.pool.reload()
 
     def mag_count(self) -> int:
-        return self.pool.in_magazine(self._mag_center(), 0.078)
+        """剩余总弹药 (仓内实体 + 未实体化储备)"""
+        return self.pool.remaining
 
     # ---- 发射 ----
     def fire_one(self) -> tuple[bool, str]:
@@ -151,8 +152,9 @@ class Sim:
             self.reset()
             print('[复位]')
         elif ch == '.':                     # 一键装满弹仓
-            n = self.reload()
-            print(f'[装弹] 补入 {n} 发, 仓内 {self.mag_count()}')
+            phys, total = self.reload()
+            print(f'[装弹] 满弹 {total} 发 (其中 {phys} 发为刚体, '
+                  f'其余为储备 —— 见 MAG_CAPACITY 注释)')
         elif ch == '=':                     # 打印状态
             self.dump()
 
@@ -164,7 +166,10 @@ class Sim:
                   f'v={self.ctrl.qvel(j):7.3f}rad/s')
         for j in ('fric_left_joint', 'fric_right_joint'):
             print(f'  {j:16s} w={self.ctrl.qvel(j):8.1f} rad/s')
-        print(f'  弹仓 {self.mag_count()} 发   飞行中/存活 {self.pool.alive_count}/{self.pool.n}')
+        print(f'  弹药 {self.mag_count()}/{self.pool.capacity} 发 '
+              f'(刚体 {self.pool.in_magazine} + 储备 {self.pool.reserve})'
+              f'   飞行中 {self.pool.alive_count - self.pool.in_magazine}'
+              f'   出弹口漏 {self.pool.chute_losses}')
 
     def _poll_hold(self, viewer):
         """MuJoCo 被动查看器只给按下事件, 持续操作用目标值累积实现"""
@@ -196,7 +201,7 @@ class Sim:
 
                 if self.cfg.projectile.auto_refill and \
                         self.mag_count() < self.cfg.projectile.refill_below:
-                    self.reload()
+                    self.reload()   # 打空自动补满, 省得测弹道时反复按 .
                 if self.firing:
                     self.fire_one()          # 连发时冷却自然限流, 失败无需提示
                 self._advance(dt * steps_per_frame)
