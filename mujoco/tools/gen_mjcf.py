@@ -211,6 +211,8 @@ def build():
     ET.SubElement(vis, 'rgba', haze='0.87 0.90 0.94 1')
     ET.SubElement(vis, 'quality', shadowsize='4096', offsamples='8')
     ET.SubElement(vis, 'map', znear='0.01', zfar='60')
+    # 离屏帧缓冲默认 640x480, 超过就报错。放大以便截图/录像/相机传感器取图。
+    ET.SubElement(vis, 'global', offwidth='1920', offheight='1080')
 
     asset = ET.SubElement(root, 'asset')
     ET.SubElement(asset, 'texture', type='skybox', builtin='gradient',
@@ -246,9 +248,12 @@ def build():
     d_vis.set('class', 'visual')
     ET.SubElement(d_vis, 'geom', group='1', contype='0', conaffinity='0', density='0')
 
+    # 碰撞体放 group 3: MuJoCo 查看器默认只显示 group 0/1/2, 放 2 的话这些粗包络
+    # (底盘 r=0.30、云台 r=0.26 的圆柱)会半透明地罩在模型外面, 整车看着是橙色的。
+    # 需要看碰撞体时在查看器的 Group enable 面板里勾上 3 即可。
     d_col = ET.SubElement(sentry, 'default')
     d_col.set('class', 'collision')
-    ET.SubElement(d_col, 'geom', group='2', rgba='0.9 0.4 0.2 0.25',
+    ET.SubElement(d_col, 'geom', group='3', rgba='0.9 0.4 0.2 0.25',
                   condim='4', friction='1.0 0.02 0.001')
 
     # 云台三轴: armature 是折算转子惯量 N^2*J_rotor, 这里是待辨识量的初值。
