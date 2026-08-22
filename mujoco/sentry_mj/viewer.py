@@ -3,14 +3,16 @@
 视角设计参考 at_vision_simulator 的 Free / FirstPerson / ThirdPerson 循环, 这里扩成
 五个: 自由 + 三个跟随机位 + 两个机载相机(云台自瞄相机、雷达位)。
 
-按键 (避开 MuJoCo 内置的 Space/Tab/Backspace/[]/Esc/F1-F5/方向键)
-  V            循环切换视角
+按键 —— 只能用数字与符号: MuJoCo 查看器把 26 个字母全绑给了可视化/渲染标志
+(X=Texture, V=Tendon, B=Perturb Force, N=Island, S=Shadow ...), 撞上会同时
+触发它自己的开关。
   1..6         直接选视角
-  X            发射一发
-  B            连发开关
-  N            摩擦轮启停
-  R            复位
-  P            打印状态(位姿、关节角、轮速、弹丸数)
+  0            循环切换视角
+  7            发射一发
+  8            连发开关
+  9            摩擦轮启停
+  -            复位
+  =            打印状态(位姿、关节角、轮速、弹丸数)
 """
 from __future__ import annotations
 
@@ -88,8 +90,13 @@ class Sim:
         return True, ''
 
     # ---- 输入 ----
-    # Space / Tab / Backspace / [ ] / Esc / F1-F5 / 方向键 由 MuJoCo 查看器占用,
-    # 按下去不会传到这里, 所以自定义功能一律避开它们。
+    # MuJoCo 查看器把【全部 26 个字母】都占用了 —— mjVISSTRING 与 mjRNDSTRING
+    # 里每个可视化/渲染标志都绑了一个字母 (X=Texture, V=Tendon, B=Perturb Force,
+    # N=Island, S=Shadow, W=Wireframe ...)。这些回调仍会转发到这里, 但按键同时
+    # 触发了查看器自身的开关: 早先把发射绑在 X 上, 一按就把地面纹理关掉, 地面
+    # 变成纯白, 再按一次又回来 —— 看着像渲染 bug, 其实是快捷键撞了。
+    # 另外 Space/Tab/Backspace/[]/Esc/F1-F5/方向键 也归查看器。
+    # 结果是只有数字键和少数符号可用。
     def on_key(self, keycode: int):
         """按键回调.
 
@@ -102,33 +109,33 @@ class Sim:
             print(f'[按键处理异常] {type(exc).__name__}: {exc}')
 
     def _handle_key(self, keycode: int):
-        ch = chr(keycode).upper() if 32 <= keycode < 127 else ''
-        if ch == 'V':                       # 切视角
-            self.view_idx = (self.view_idx + 1) % len(VIEWS)
-            print(f'[视角] {self.view_idx + 1}/{len(VIEWS)} {VIEWS[self.view_idx][0]}')
+        ch = chr(keycode) if 32 <= keycode < 127 else ''
         # 必须先判 ch 非空: Python 里 '' in '123456' 是 True(空串是任何串的子串),
         # 方向键/Shift 等非可打印键会走进这一支, int('') 直接抛异常。
-        elif ch and ch in '123456':
+        if ch and ch in '123456':           # 直接选视角
             i = int(ch) - 1
             if i < len(VIEWS):
                 self.view_idx = i
                 print(f'[视角] {VIEWS[i][0]}')
-        elif ch == 'X':                     # 单发
+        elif ch == '0':                     # 循环切视角
+            self.view_idx = (self.view_idx + 1) % len(VIEWS)
+            print(f'[视角] {self.view_idx + 1}/{len(VIEWS)} {VIEWS[self.view_idx][0]}')
+        elif ch == '7':                     # 单发
             ok, why = self.fire_one()
             if ok:
                 print(f'[发射] 存活 {self.pool.alive_count}')
             elif why:
                 print(f'[未发射] {why}')
-        elif ch == 'B':                     # 连发
+        elif ch == '8':                     # 连发
             self.firing = not self.firing
             print(f'[连发] {"开" if self.firing else "关"}')
-        elif ch == 'N':                     # 摩擦轮开关
+        elif ch == '9':                     # 摩擦轮开关
             self.ctrl.fric_on = not self.ctrl.fric_on
             print(f'[摩擦轮] {"启动" if self.ctrl.fric_on else "停转"}')
-        elif ch == 'R':
+        elif ch == '-':                     # 复位
             self.reset()
             print('[复位]')
-        elif ch == 'P':
+        elif ch == '=':                     # 打印状态
             self.dump()
 
     def dump(self):
@@ -243,8 +250,8 @@ def main():
     sim = Sim(args.model, args.config)
     sim.view_idx = max(0, min(args.view - 1, len(VIEWS) - 1))
     print('视角:', '  '.join(f'{i + 1}={n}' for i, (n, _) in enumerate(VIEWS)))
-    print('X 发射   B 连发   V 切视角   N 摩擦轮   R 复位   P 状态')
-    print('(Space/Tab 等归 MuJoCo 查看器自身使用)')
+    print('7 发射   8 连发   0 切视角   9 摩擦轮   - 复位   = 状态')
+    print('(字母键全被 MuJoCo 查看器占用为可视化开关, 故只用数字/符号)')
     sim.run(duration=args.duration, render_hz=args.render_hz)
 
     # GLFW 在部分 NVIDIA 驱动上关窗时会段错误(X 连接名被写坏), 与模型无关 ——
