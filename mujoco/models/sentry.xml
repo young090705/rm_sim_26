@@ -1,0 +1,384 @@
+<?xml version="1.0" ?>
+<mujoco model="sentry">
+  <compiler angle="radian" autolimits="true" meshdir="assets" texturedir="assets"/>
+  <option timestep="0.001" gravity="0 0 -9.81" density="1.204" viscosity="1.8e-5" integrator="implicitfast" solver="Newton" iterations="50" tolerance="1e-10" impratio="10" cone="elliptic" jacobian="sparse"/>
+  <size memory="64M"/>
+  <visual>
+    <headlight ambient="0.45 0.45 0.45" diffuse="0.55 0.55 0.55" specular="0.2 0.2 0.2"/>
+    <rgba haze="0.87 0.90 0.94 1"/>
+    <quality shadowsize="4096" offsamples="8"/>
+    <map znear="0.01" zfar="60"/>
+  </visual>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.62 0.68 0.76" rgb2="0.86 0.89 0.93" width="512" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.30 0.32 0.35" rgb2="0.36 0.38 0.41" width="512" height="512"/>
+    <material name="ground" texture="grid" texrepeat="24 24" texuniform="true" reflectance="0.05"/>
+    <material name="fiberglass" rgba="0.021 0.023 0.025 1" specular="0.15" shininess="0.25" reflectance="0.02"/>
+    <material name="carbon" rgba="0.013 0.014 0.016 1" specular="0.3" shininess="0.45" reflectance="0.05"/>
+    <material name="printed" rgba="0.03 0.031 0.034 1" specular="0.08" shininess="0.12" reflectance="0.0"/>
+    <material name="aluminium" rgba="0.34 0.353 0.372 1" specular="0.85" shininess="0.75" reflectance="0.35"/>
+    <material name="steel" rgba="0.248 0.258 0.274 1" specular="0.9" shininess="0.85" reflectance="0.45"/>
+    <material name="brass" rgba="0.272 0.146 0.052 1" specular="0.85" shininess="0.7" reflectance="0.3"/>
+    <material name="roller" rgba="0.75 0.75 0.715 1" specular="0.2" shininess="0.25" reflectance="0.02"/>
+    <material name="camera" rgba="0.34 0.353 0.372 1" specular="0.75" shininess="0.7" reflectance="0.3"/>
+    <material name="referee" rgba="0.61 0.625 0.65 1" specular="0.25" shininess="0.3" reflectance="0.05"/>
+    <material name="lightbar" rgba="0.7 0.715 0.75 1" specular="0.3" shininess="0.4" reflectance="0.1"/>
+    <material name="lidar" rgba="0.448 0.472 0.514 1" specular="0.6" shininess="0.55" reflectance="0.2"/>
+    <material name="acrylic" rgba="0.71 0.78 0.82 0.22" specular="0.95" shininess="0.9" reflectance="0.5"/>
+    <material name="pcb" rgba="0.01 0.062 0.017 1" specular="0.2" shininess="0.35" reflectance="0.05"/>
+    <material name="fluor" rgba="0.48 0.76 0.115 1" specular="0.3" shininess="0.45" reflectance="0.1"/>
+    <material name="accent" rgba="0.18 0.13 0.01 1" specular="0.55" shininess="0.6" reflectance="0.15"/>
+    <material name="darkbox" rgba="0.07 0.074 0.079 1" specular="0.2" shininess="0.3" reflectance="0.03"/>
+    <material name="misc" rgba="0.024 0.026 0.029 1" specular="0.15" shininess="0.25" reflectance="0.02"/>
+    <material name="tracer" rgba="0.35 1.0 0.15 1" emission="0.85" specular="0.4" shininess="0.6"/>
+    <mesh name="base_link__accent" file="base_link__accent.obj"/>
+    <mesh name="base_link__aluminium" file="base_link__aluminium.obj"/>
+    <mesh name="base_link__darkbox" file="base_link__darkbox.obj"/>
+    <mesh name="base_link__fiberglass" file="base_link__fiberglass.obj"/>
+    <mesh name="base_link__lightbar" file="base_link__lightbar.obj"/>
+    <mesh name="base_link__misc" file="base_link__misc.obj"/>
+    <mesh name="base_link__printed" file="base_link__printed.obj"/>
+    <mesh name="base_link__referee" file="base_link__referee.obj"/>
+    <mesh name="base_link__steel" file="base_link__steel.obj"/>
+    <mesh name="gimbal_link__accent" file="gimbal_link__accent.obj"/>
+    <mesh name="gimbal_link__acrylic" file="gimbal_link__acrylic.obj"/>
+    <mesh name="gimbal_link__aluminium" file="gimbal_link__aluminium.obj"/>
+    <mesh name="gimbal_link__camera" file="gimbal_link__camera.obj"/>
+    <mesh name="gimbal_link__fiberglass" file="gimbal_link__fiberglass.obj"/>
+    <mesh name="gimbal_link__lidar" file="gimbal_link__lidar.obj"/>
+    <mesh name="gimbal_link__misc" file="gimbal_link__misc.obj"/>
+    <mesh name="gimbal_link__pcb" file="gimbal_link__pcb.obj"/>
+    <mesh name="gimbal_link__printed" file="gimbal_link__printed.obj"/>
+    <mesh name="gimbal_link__referee" file="gimbal_link__referee.obj"/>
+    <mesh name="gimbal_link__steel" file="gimbal_link__steel.obj"/>
+    <mesh name="omni_wheel__fiberglass" file="omni_wheel__fiberglass.obj"/>
+    <mesh name="omni_wheel__printed" file="omni_wheel__printed.obj"/>
+    <mesh name="omni_wheel__roller" file="omni_wheel__roller.obj"/>
+    <mesh name="omni_wheel__steel" file="omni_wheel__steel.obj"/>
+    <mesh name="pitch_link__accent" file="pitch_link__accent.obj"/>
+    <mesh name="pitch_link__acrylic" file="pitch_link__acrylic.obj"/>
+    <mesh name="pitch_link__aluminium" file="pitch_link__aluminium.obj"/>
+    <mesh name="pitch_link__camera" file="pitch_link__camera.obj"/>
+    <mesh name="pitch_link__fiberglass" file="pitch_link__fiberglass.obj"/>
+    <mesh name="pitch_link__misc" file="pitch_link__misc.obj"/>
+    <mesh name="pitch_link__printed" file="pitch_link__printed.obj"/>
+    <mesh name="pitch_link__referee" file="pitch_link__referee.obj"/>
+    <mesh name="pitch_link__steel" file="pitch_link__steel.obj"/>
+    <mesh name="small_yaw_link__aluminium" file="small_yaw_link__aluminium.obj"/>
+    <mesh name="small_yaw_link__fiberglass" file="small_yaw_link__fiberglass.obj"/>
+    <mesh name="small_yaw_link__misc" file="small_yaw_link__misc.obj"/>
+    <mesh name="small_yaw_link__printed" file="small_yaw_link__printed.obj"/>
+    <mesh name="small_yaw_link__steel" file="small_yaw_link__steel.obj"/>
+  </asset>
+  <default>
+    <default class="sentry">
+      <default class="visual">
+        <geom group="1" contype="0" conaffinity="0" density="0"/>
+      </default>
+      <default class="collision">
+        <geom group="2" rgba="0.9 0.4 0.2 0.25" condim="4" friction="1.0 0.02 0.001"/>
+      </default>
+      <default class="gimbal">
+        <joint armature="0.004" damping="0.0" frictionloss="0.0"/>
+      </default>
+      <default class="wheel">
+        <joint armature="0.002" damping="0.0" frictionloss="0.0"/>
+        <geom condim="4" friction="1.4 0.005 0.0002" priority="1"/>
+      </default>
+    </default>
+  </default>
+  <worldbody>
+    <geom name="floor" type="plane" size="12 12 0.05" material="ground" condim="4" friction="1.0 0.02 0.001"/>
+    <light pos="0 0 4.5" dir="0 0 -1" directional="true" diffuse="0.5 0.5 0.5"/>
+    <light pos="3 -3 3" dir="-0.6 0.6 -0.7" directional="true" diffuse="0.35 0.35 0.35"/>
+    <body name="base_link" pos="0 0 0.30" childclass="sentry">
+      <freejoint name="root"/>
+      <inertial pos="-0.0014 0.0103 0.0605" mass="9.404" diaginertia="0.4551 0.4342 0.3694"/>
+      <geom class="visual" type="mesh" mesh="base_link__accent" material="accent" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__aluminium" material="aluminium" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__darkbox" material="darkbox" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__fiberglass" material="fiberglass" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__lightbar" material="lightbar" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__misc" material="misc" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__printed" material="printed" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__referee" material="referee" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom class="visual" type="mesh" mesh="base_link__steel" material="steel" quat="0.707107 0.707107 0 0" pos="-0.0625 -0.0625 0"/>
+      <geom name="base_col" type="cylinder" size="0.30 0.13" pos="0 0 0.10" class="collision"/>
+      <body name="wheel_fl_link" pos="0.1732 0.1732 -0.02" quat="0.65328 -0.270599 0.653282 0.270598" childclass="wheel">
+        <inertial pos="0 0 0" mass="1.3433" diaginertia="0.0016 0.0016 0.0032"/>
+        <joint name="wheel_fl_joint" type="hinge" axis="0 0 1" damping="0.05"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__fiberglass" material="fiberglass"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__printed" material="printed"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__roller" material="roller"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__steel" material="steel"/>
+        <geom name="wheel_fl_link_col" type="sphere" size="0.076" class="collision"/>
+      </body>
+      <body name="wheel_rl_link" pos="-0.1732 0.1732 -0.02" quat="0.270596 -0.653283 0.270597 0.653281" childclass="wheel">
+        <inertial pos="0 0 0" mass="1.3433" diaginertia="0.0016 0.0016 0.0032"/>
+        <joint name="wheel_rl_joint" type="hinge" axis="0 0 1" damping="0.05"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__fiberglass" material="fiberglass"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__printed" material="printed"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__roller" material="roller"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__steel" material="steel"/>
+        <geom name="wheel_rl_link_col" type="sphere" size="0.076" class="collision"/>
+      </body>
+      <body name="wheel_rr_link" pos="-0.1732 -0.1732 -0.02" quat="0.270596 0.653283 0.270597 -0.653281" childclass="wheel">
+        <inertial pos="0 0 0" mass="1.3433" diaginertia="0.0016 0.0016 0.0032"/>
+        <joint name="wheel_rr_joint" type="hinge" axis="0 0 1" damping="0.05"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__fiberglass" material="fiberglass"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__printed" material="printed"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__roller" material="roller"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__steel" material="steel"/>
+        <geom name="wheel_rr_link_col" type="sphere" size="0.076" class="collision"/>
+      </body>
+      <body name="wheel_fr_link" pos="0.1732 -0.1732 -0.02" quat="0.65328 0.270599 0.653282 -0.270598" childclass="wheel">
+        <inertial pos="0 0 0" mass="1.3433" diaginertia="0.0016 0.0016 0.0032"/>
+        <joint name="wheel_fr_joint" type="hinge" axis="0 0 1" damping="0.05"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__fiberglass" material="fiberglass"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__printed" material="printed"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__roller" material="roller"/>
+        <geom class="visual" type="mesh" mesh="omni_wheel__steel" material="steel"/>
+        <geom name="wheel_fr_link_col" type="sphere" size="0.076" class="collision"/>
+      </body>
+      <body name="gimbal_link" pos="0 0 0.0845" quat="1 0 0 0" childclass="gimbal">
+        <inertial pos="-0.0077 -0.0266 0.1614" mass="9.0254" diaginertia="0.20498 0.17471 0.17204"/>
+        <joint name="big_yaw_joint" type="hinge" axis="0 0 1" damping="0.3"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__accent" material="accent" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__acrylic" material="acrylic" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__aluminium" material="aluminium" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__camera" material="camera" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__fiberglass" material="fiberglass" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__lidar" material="lidar" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__misc" material="misc" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__pcb" material="pcb" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__printed" material="printed" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__referee" material="referee" quat="0.707107 0.707107 0 0"/>
+        <geom class="visual" type="mesh" mesh="gimbal_link__steel" material="steel" quat="0.707107 0.707107 0 0"/>
+        <geom name="gimbal_col" type="cylinder" size="0.26 0.17" pos="0 0 0.20" class="collision"/>
+        <body name="livox_lidar" pos="-0.1963 -0.088 0.2516" quat="0.675543 0.390026 -0.312859 -0.541886">
+          <inertial pos="0 0 0" mass="0.265" diaginertia="0.00018 0.00018 0.00018"/>
+          <site name="livox_lidar" size="0.012" rgba="0.2 0.9 1.0 0.55"/>
+          <camera name="lidar_cam" pos="0 0 0" quat="1 0 0 0" fovy="90"/>
+        </body>
+        <body name="small_yaw_link" pos="0 0.0585 0.121" quat="1 0 0 0" childclass="gimbal">
+          <inertial pos="-0.0021 0.023 0.1237" mass="2.246" diaginertia="0.01039 0.00773 0.00471"/>
+          <joint name="small_yaw_joint" type="hinge" axis="0 0 1" damping="0.05" range="-1.57 1.57"/>
+          <geom class="visual" type="mesh" mesh="small_yaw_link__aluminium" material="aluminium" quat="0.707107 0.707107 0 0"/>
+          <geom class="visual" type="mesh" mesh="small_yaw_link__fiberglass" material="fiberglass" quat="0.707107 0.707107 0 0"/>
+          <geom class="visual" type="mesh" mesh="small_yaw_link__misc" material="misc" quat="0.707107 0.707107 0 0"/>
+          <geom class="visual" type="mesh" mesh="small_yaw_link__printed" material="printed" quat="0.707107 0.707107 0 0"/>
+          <geom class="visual" type="mesh" mesh="small_yaw_link__steel" material="steel" quat="0.707107 0.707107 0 0"/>
+          <body name="pitch_link" pos="0 0 0.169" quat="1 0 0 0" childclass="gimbal">
+            <inertial pos="-0.0011 0.0643 0.0326" mass="1.2" diaginertia="0.00867 0.00237 0.00767"/>
+            <joint name="pitch_joint" type="hinge" axis="1 0 0" damping="0.02" range="-0.35 0.55"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__accent" material="accent" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__acrylic" material="acrylic" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__aluminium" material="aluminium" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__camera" material="camera" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__fiberglass" material="fiberglass" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__misc" material="misc" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__printed" material="printed" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__referee" material="referee" quat="0.707107 0.707107 0 0"/>
+            <geom class="visual" type="mesh" mesh="pitch_link__steel" material="steel" quat="0.707107 0.707107 0 0"/>
+            <site name="muzzle" pos="0 0.26 0.14" quat="0.707107 -0.707107 0 0" size="0.006" rgba="1 0.35 0.1 0.9"/>
+            <camera name="gimbal_cam" pos="-0.0017 0.1395 0.0531" quat="4.32978e-17 4.32978e-17 0.707107 0.707107" fovy="48"/>
+            <site name="gimbal_imu" pos="-0.0017 0.0055 0.0306" size="0.008" rgba="1 0.9 0.2 0.7"/>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="proj0" pos="0 0 -5.00">
+      <freejoint name="proj0_free"/>
+      <geom name="proj0_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj0_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj1" pos="0 0 -5.10">
+      <freejoint name="proj1_free"/>
+      <geom name="proj1_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj1_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj2" pos="0 0 -5.20">
+      <freejoint name="proj2_free"/>
+      <geom name="proj2_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj2_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj3" pos="0 0 -5.30">
+      <freejoint name="proj3_free"/>
+      <geom name="proj3_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj3_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj4" pos="0 0 -5.40">
+      <freejoint name="proj4_free"/>
+      <geom name="proj4_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj4_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj5" pos="0 0 -5.50">
+      <freejoint name="proj5_free"/>
+      <geom name="proj5_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj5_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj6" pos="0 0 -5.60">
+      <freejoint name="proj6_free"/>
+      <geom name="proj6_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj6_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj7" pos="0 0 -5.70">
+      <freejoint name="proj7_free"/>
+      <geom name="proj7_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj7_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj8" pos="0 0 -5.80">
+      <freejoint name="proj8_free"/>
+      <geom name="proj8_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj8_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj9" pos="0 0 -5.90">
+      <freejoint name="proj9_free"/>
+      <geom name="proj9_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj9_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj10" pos="0 0 -6.00">
+      <freejoint name="proj10_free"/>
+      <geom name="proj10_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj10_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj11" pos="0 0 -6.10">
+      <freejoint name="proj11_free"/>
+      <geom name="proj11_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj11_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj12" pos="0 0 -6.20">
+      <freejoint name="proj12_free"/>
+      <geom name="proj12_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj12_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj13" pos="0 0 -6.30">
+      <freejoint name="proj13_free"/>
+      <geom name="proj13_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj13_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj14" pos="0 0 -6.40">
+      <freejoint name="proj14_free"/>
+      <geom name="proj14_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj14_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj15" pos="0 0 -6.50">
+      <freejoint name="proj15_free"/>
+      <geom name="proj15_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj15_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj16" pos="0 0 -6.60">
+      <freejoint name="proj16_free"/>
+      <geom name="proj16_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj16_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj17" pos="0 0 -6.70">
+      <freejoint name="proj17_free"/>
+      <geom name="proj17_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj17_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj18" pos="0 0 -6.80">
+      <freejoint name="proj18_free"/>
+      <geom name="proj18_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj18_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj19" pos="0 0 -6.90">
+      <freejoint name="proj19_free"/>
+      <geom name="proj19_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj19_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj20" pos="0 0 -7.00">
+      <freejoint name="proj20_free"/>
+      <geom name="proj20_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj20_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj21" pos="0 0 -7.10">
+      <freejoint name="proj21_free"/>
+      <geom name="proj21_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj21_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj22" pos="0 0 -7.20">
+      <freejoint name="proj22_free"/>
+      <geom name="proj22_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj22_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <body name="proj23" pos="0 0 -7.30">
+      <freejoint name="proj23_free"/>
+      <geom name="proj23_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" friction="0.4 0.005 0.0001" solref="0.004 1" solimp="0.9 0.95 0.001" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
+      <light name="proj23_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
+    </body>
+    <camera name="track_chase" mode="trackcom" pos="-1.6 -1.6 1.15" xyaxes="0.707 -0.707 0 0.3 0.3 0.9"/>
+    <camera name="track_side" mode="trackcom" pos="0 -2.4 0.75" xyaxes="1 0 0 0 0.35 0.94"/>
+    <camera name="track_top" mode="trackcom" pos="0 -0.05 3.0" xyaxes="1 0 0 0 1 0"/>
+  </worldbody>
+  <contact>
+    <exclude body1="base_link" body2="gimbal_link"/>
+    <exclude body1="base_link" body2="livox_lidar"/>
+    <exclude body1="base_link" body2="small_yaw_link"/>
+    <exclude body1="base_link" body2="pitch_link"/>
+    <exclude body1="base_link" body2="wheel_fl_link"/>
+    <exclude body1="base_link" body2="wheel_rl_link"/>
+    <exclude body1="base_link" body2="wheel_rr_link"/>
+    <exclude body1="base_link" body2="wheel_fr_link"/>
+    <exclude body1="gimbal_link" body2="livox_lidar"/>
+    <exclude body1="gimbal_link" body2="small_yaw_link"/>
+    <exclude body1="gimbal_link" body2="pitch_link"/>
+    <exclude body1="gimbal_link" body2="wheel_fl_link"/>
+    <exclude body1="gimbal_link" body2="wheel_rl_link"/>
+    <exclude body1="gimbal_link" body2="wheel_rr_link"/>
+    <exclude body1="gimbal_link" body2="wheel_fr_link"/>
+    <exclude body1="livox_lidar" body2="small_yaw_link"/>
+    <exclude body1="livox_lidar" body2="pitch_link"/>
+    <exclude body1="livox_lidar" body2="wheel_fl_link"/>
+    <exclude body1="livox_lidar" body2="wheel_rl_link"/>
+    <exclude body1="livox_lidar" body2="wheel_rr_link"/>
+    <exclude body1="livox_lidar" body2="wheel_fr_link"/>
+    <exclude body1="small_yaw_link" body2="pitch_link"/>
+    <exclude body1="small_yaw_link" body2="wheel_fl_link"/>
+    <exclude body1="small_yaw_link" body2="wheel_rl_link"/>
+    <exclude body1="small_yaw_link" body2="wheel_rr_link"/>
+    <exclude body1="small_yaw_link" body2="wheel_fr_link"/>
+    <exclude body1="pitch_link" body2="wheel_fl_link"/>
+    <exclude body1="pitch_link" body2="wheel_rl_link"/>
+    <exclude body1="pitch_link" body2="wheel_rr_link"/>
+    <exclude body1="pitch_link" body2="wheel_fr_link"/>
+    <exclude body1="wheel_fl_link" body2="wheel_rl_link"/>
+    <exclude body1="wheel_fl_link" body2="wheel_rr_link"/>
+    <exclude body1="wheel_fl_link" body2="wheel_fr_link"/>
+    <exclude body1="wheel_rl_link" body2="wheel_rr_link"/>
+    <exclude body1="wheel_rl_link" body2="wheel_fr_link"/>
+    <exclude body1="wheel_rr_link" body2="wheel_fr_link"/>
+  </contact>
+  <actuator>
+    <motor name="big_yaw_joint_trq" joint="big_yaw_joint" gear="1" ctrlrange="-12.0 12.0"/>
+    <motor name="small_yaw_joint_trq" joint="small_yaw_joint" gear="1" ctrlrange="-6.0 6.0"/>
+    <motor name="pitch_joint_trq" joint="pitch_joint" gear="1" ctrlrange="-6.0 6.0"/>
+    <motor name="wheel_fl_joint_trq" joint="wheel_fl_joint" gear="1" ctrlrange="-6 6"/>
+    <motor name="wheel_rl_joint_trq" joint="wheel_rl_joint" gear="1" ctrlrange="-6 6"/>
+    <motor name="wheel_rr_joint_trq" joint="wheel_rr_joint" gear="1" ctrlrange="-6 6"/>
+    <motor name="wheel_fr_joint_trq" joint="wheel_fr_joint" gear="1" ctrlrange="-6 6"/>
+  </actuator>
+  <sensor>
+    <jointpos name="big_yaw_joint_pos" joint="big_yaw_joint"/>
+    <jointvel name="big_yaw_joint_vel" joint="big_yaw_joint"/>
+    <jointpos name="small_yaw_joint_pos" joint="small_yaw_joint"/>
+    <jointvel name="small_yaw_joint_vel" joint="small_yaw_joint"/>
+    <jointpos name="pitch_joint_pos" joint="pitch_joint"/>
+    <jointvel name="pitch_joint_vel" joint="pitch_joint"/>
+    <jointpos name="wheel_fl_joint_pos" joint="wheel_fl_joint"/>
+    <jointvel name="wheel_fl_joint_vel" joint="wheel_fl_joint"/>
+    <jointpos name="wheel_rl_joint_pos" joint="wheel_rl_joint"/>
+    <jointvel name="wheel_rl_joint_vel" joint="wheel_rl_joint"/>
+    <jointpos name="wheel_rr_joint_pos" joint="wheel_rr_joint"/>
+    <jointvel name="wheel_rr_joint_vel" joint="wheel_rr_joint"/>
+    <jointpos name="wheel_fr_joint_pos" joint="wheel_fr_joint"/>
+    <jointvel name="wheel_fr_joint_vel" joint="wheel_fr_joint"/>
+    <jointactuatorfrc name="big_yaw_joint_frc" joint="big_yaw_joint"/>
+    <jointactuatorfrc name="small_yaw_joint_frc" joint="small_yaw_joint"/>
+    <jointactuatorfrc name="pitch_joint_frc" joint="pitch_joint"/>
+    <framequat name="imu_quat" objtype="site" objname="gimbal_imu"/>
+    <gyro name="imu_gyro" site="gimbal_imu"/>
+    <accelerometer name="imu_acc" site="gimbal_imu"/>
+    <framepos name="muzzle_pos" objtype="site" objname="muzzle"/>
+  </sensor>
+</mujoco>
