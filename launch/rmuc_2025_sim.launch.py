@@ -42,6 +42,7 @@ def generate_launch_description():
 
     def _load_sim_config(config_path):
         default_config = {
+            "robot_model": "sentry",
             "lidar_mode": "auto",
             "rgl_plugin_root": "",
             "livox_mid360": {
@@ -164,20 +165,28 @@ def generate_launch_description():
     package_name = "rm_sim_26"
     pkg_share_path = get_package_share_directory(package_name)
     world_file = os.path.join(pkg_share_path, "worlds", "rmuc_2025_world.world")
-    robot_urdf_path = os.path.join(
-        pkg_share_path, "models", "mecanum_car", "robot.urdf"
-    )
-    robot_model_path = os.path.join(
-        pkg_share_path, "models", "mecanum_car", "model.sdf"
-    )
     pattern_file_path = os.path.join(
         pkg_share_path, "plugin", "LivoxMid360.mat3x4f"
     )
-    with open(robot_urdf_path, "r", encoding="utf-8") as urdf_file:
-        robot_description = urdf_file.read()
 
     config_path = os.path.join(pkg_share_path, "config", "sim_config.yaml")
     sim_config = _load_sim_config(config_path)
+
+    robot_model = sim_config.get("robot_model", "sentry")
+    if robot_model not in ("sentry", "mecanum_car"):
+        print(f"[WARN] 未知robot_model '{robot_model}'，回退为sentry")
+        robot_model = "sentry"
+    robot_name = "sentry_bot" if robot_model == "sentry" else "mecanum_bot"
+    print(f"[INFO] 机器人模型: {robot_model} (spawn name: {robot_name})")
+
+    robot_urdf_path = os.path.join(
+        pkg_share_path, "models", robot_model, "robot.urdf"
+    )
+    robot_model_path = os.path.join(
+        pkg_share_path, "models", robot_model, "model.sdf"
+    )
+    with open(robot_urdf_path, "r", encoding="utf-8") as urdf_file:
+        robot_description = urdf_file.read()
 
     has_nvidia = _has_nvidia_ml()
     use_rgl = _determine_use_rgl(sim_config["lidar_mode"], has_nvidia)
@@ -315,7 +324,7 @@ def generate_launch_description():
             "-file",
             robot_model_path,
             "-name",
-            "mecanum_bot",
+            robot_name,
             "-x",
             "3.4",
             "-y",
@@ -390,7 +399,7 @@ def generate_launch_description():
                 "--frame-id",
                 "livox_lidar",
                 "--child-frame-id",
-                "mecanum_bot/livox_lidar/livox_lidar",
+                f"{robot_name}/livox_lidar/livox_lidar",
             ],
             output="screen",
         )
@@ -409,19 +418,56 @@ def generate_launch_description():
         output="screen",
     )
 
-    gimbal_yaw_bridge = Node(
+    if robot_model == "sentry":
+        gimbal_topics = [
+            "/gimbal/big_yaw/cmd_pos",
+            "/gimbal/small_yaw/cmd_pos",
+            "/gimbal/pitch/cmd_pos",
+        ]
+    else:
+        gimbal_topics = ["/gimbal/yaw/cmd_pos", "/gimbal/pitch/cmd_pos"]
+
+    gimbal_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=["/gimbal/yaw/cmd_pos@std_msgs/msg/Float64@gz.msgs.Double"],
+        name="gimbal_cmd_bridge",
+        arguments=[
+            f"{topic}@std_msgs/msg/Float64@gz.msgs.Double" for topic in gimbal_topics
+        ],
         output="screen",
     )
 
-    gimbal_pitch_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=["/gimbal/pitch/cmd_pos@std_msgs/msg/Float64@gz.msgs.Double"],
-        output="screen",
-    )
+    # 哨兵: 4轮独立驱动, 逆运动学在 omni_drive 节点
+    wheel_bridge = None
+    omni_drive = None
+    if robot_model == "sentry":
+        wheel_bridge = Node(
+            package="ros_gz_bridge",
+            executable="parameter_bridge",
+            name="wheel_cmd_bridge",
+            arguments=[
+                f"/{wheel}/cmd_vel@std_msgs/msg/Float64@gz.msgs.Double"
+                for wheel in ("wheel_fl", "wheel_rl", "wheel_rr", "wheel_fr")
+            ],
+            output="screen",
+        )
+        omni_drive = Node(
+            package="rm_sim_26",
+            executable="omni_drive.py",
+            name="omni_drive",
+            parameters=[{"use_sim_time": use_sim_time}],
+            output="screen",
+        )
+
+    gimbal_imu_bridge = None
+    if robot_model == "sentry":
+        gimbal_imu_bridge = Node(
+            package="ros_gz_bridge",
+            executable="parameter_bridge",
+            name="gimbal_imu_bridge",
+            arguments=["/gimbal/imu@sensor_msgs/msg/Imu@gz.msgs.IMU"],
+            output="screen",
+        )
 
     camera_bridge = Node(
         package="ros_gz_bridge",
@@ -434,7 +480,7 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=[
-            "/model/mecanum_bot/pose@geometry_msgs/msg/PoseStamped@gz.msgs.Pose"
+            f"/model/{robot_name}/pose@geometry_msgs/msg/PoseStamped@gz.msgs.Pose"
         ],
         output="screen",
     )
@@ -461,8 +507,7 @@ def generate_launch_description():
         lidar_bridge,
         imu_bridge,
         chassis_imu_bridge,
-        gimbal_yaw_bridge,
-        gimbal_pitch_bridge,
+        gimbal_bridge,
         camera_bridge,
         pose_bridge,
         joint_state_bridge,
@@ -472,5 +517,8 @@ def generate_launch_description():
         launch_actions.insert(3, set_rgl_patterns_dir)
     if lidar_frame_transform is not None:
         launch_actions.append(lidar_frame_transform)
+    for optional_node in (wheel_bridge, omni_drive, gimbal_imu_bridge):
+        if optional_node is not None:
+            launch_actions.append(optional_node)
 
     return LaunchDescription(launch_actions)

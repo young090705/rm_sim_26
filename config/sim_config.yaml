@@ -1,6 +1,11 @@
 # RM_SIM_26 仿真配置文件
 # Simulation Configuration
 
+# 机器人模型
+# robot_model: "sentry"      - 26赛季哨兵(全向轮+三轴云台, CAD实测几何)
+# robot_model: "mecanum_car" - 旧麦轮测试车(保留)
+robot_model: "sentry"
+
 # 雷达仿真模式
 # lidar_mode: "rgl"     - 使用RGL插件模拟Mid360 (需要NVIDIA显卡)
 # lidar_mode: "gpu_lidar" - 使用Gazebo内置gpu_lidar (无需NVIDIA显卡)
