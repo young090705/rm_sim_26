@@ -17,8 +17,9 @@ launch_dt = 2.0e-5
 
 # 弹仓与拨弹盘
 feeder_speed = 12.0     # 拨弹盘转速 rad/s (2006 电机), 决定供弹率
-auto_refill = true      # 仓内不足 refill_below 时自动补满
-refill_below = 20
+auto_refill = true      # 剩余弹药不足 refill_below 时自动补满
+# 弹仓自然堆积容量实测 712 发 (tools/measure_mag_capacity.py), 阈值按整仓算
+refill_below = 40
 
 [gimbal]
 big_yaw_kp = 40.0

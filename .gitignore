@@ -6,3 +6,4 @@ log/
 mujoco/.venv/
 mujoco/uv.lock
 mujoco/**/__pycache__/
+mujoco/tools/_magwork/

@@ -31,8 +31,10 @@ class Projectile:
     launch_dt: float = 2.0e-5
     # 弹仓
     feeder_speed: float = 12.0        # 拨弹盘转速 rad/s, 决定供弹率
-    auto_refill: bool = True          # 弹仓少于 refill_below 时自动补满
-    refill_below: int = 20
+    auto_refill: bool = True          # 剩余弹药少于 refill_below 时自动补满
+    # 阈值按整仓容量算 —— 弹仓自然堆积容量实测 712 发
+    # (tools/measure_mag_capacity.py), 不是早先手搓圆桶的那 20 发。
+    refill_below: int = 40
 
 
 @dataclass(frozen=True)
