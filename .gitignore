@@ -3,3 +3,8 @@ install/
 log/
 .vscode/
 .claude/settings.local.json
+mujoco/.venv/
+mujoco/uv.lock
+mujoco/**/__pycache__/
+# OBJ 网格由 mujoco/tools/glb_to_obj.py 从 models/sentry/meshes/*.glb 生成(50MB), 不入库
+mujoco/models/assets/
