@@ -64,6 +64,55 @@
         <real_time_factor>true</real_time_factor>
         <iterations>false</iterations>
       </plugin>
+
+      <!-- 实体树：左侧列出 world 内所有 model/link，点击即选中 -->
+      <plugin filename='EntityTree' name='Entity tree'>
+        <gz-gui>
+          <title>Entity tree</title>
+          <property type='string' key='state'>docked</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- 组件检查器：显示选中实体的位姿、质量、惯量等属性 -->
+      <plugin filename='ComponentInspector' name='Component inspector'>
+        <gz-gui>
+          <title>Component inspector</title>
+          <property type='string' key='state'>docked</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- 平移/旋转/缩放操作柄（选中实体后可拖动） -->
+      <plugin filename='TransformControl' name='Transform control'>
+        <gz-gui>
+          <title>Transform control</title>
+          <property type='string' key='state'>floating</property>
+          <property type='double' key='x'>0</property>
+          <property type='double' key='y'>50</property>
+          <property type='double' key='width'>250</property>
+          <property type='double' key='height'>50</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- 右键菜单：跟随/移动到/删除实体 -->
+      <plugin filename='EntityContextMenuPlugin' name='Entity context menu'>
+        <gz-gui>
+          <property key='state' type='string'>floating</property>
+          <property key='width' type='double'>5</property>
+          <property key='height' type='double'>5</property>
+          <property key='showTitleBar' type='bool'>false</property>
+        </gz-gui>
+      </plugin>
+
+      <!-- 视角工具：切换正交/透视、预设视角 -->
+      <plugin filename='CameraTracking' name='Camera Tracking'>
+        <gz-gui>
+          <property key='resizable' type='bool'>false</property>
+          <property key='width' type='double'>5</property>
+          <property key='height' type='double'>5</property>
+          <property key='state' type='string'>floating</property>
+          <property key='showTitleBar' type='bool'>false</property>
+        </gz-gui>
+      </plugin>
     </gui>
 
     <!-- Global RGL scene manager required to upload meshes to GPU -->
