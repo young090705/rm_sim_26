@@ -419,9 +419,9 @@ def build():
                       friction='2.2 0.01 0.0005', solref='0.002 1',
                       solimp='0.95 0.99 0.0005',
                       fluidshape='ellipsoid', fluidcoef='0.47 0.25 1.5 1.0 1.0')
-        ET.SubElement(pb, 'light', name=f'proj{i}_glow', mode='track',
-                      diffuse='0.10 0.34 0.05', specular='0 0 0',
-                      attenuation='1 0 6', pos='0 0 0')
+        # 不给弹丸挂光源: 24 个 <light> 默认都投射阴影, 平时停在地下 z=-5,
+        # 一发射就随弹丸进入场景, 阴影贴图被挤爆, 地面整片变白, 再发一发又恢复。
+        # 荧光观感靠材质的 emission=0.85 就够, 不需要真光源。
 
     # ---------- 相机 ----------
     ET.SubElement(world, 'camera', name='track_chase', mode='trackcom',

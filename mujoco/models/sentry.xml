@@ -201,122 +201,98 @@
     <body name="proj0" pos="0 0 -5.00">
       <freejoint name="proj0_free"/>
       <geom name="proj0_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj0_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj1" pos="0 0 -5.10">
       <freejoint name="proj1_free"/>
       <geom name="proj1_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj1_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj2" pos="0 0 -5.20">
       <freejoint name="proj2_free"/>
       <geom name="proj2_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj2_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj3" pos="0 0 -5.30">
       <freejoint name="proj3_free"/>
       <geom name="proj3_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj3_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj4" pos="0 0 -5.40">
       <freejoint name="proj4_free"/>
       <geom name="proj4_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj4_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj5" pos="0 0 -5.50">
       <freejoint name="proj5_free"/>
       <geom name="proj5_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj5_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj6" pos="0 0 -5.60">
       <freejoint name="proj6_free"/>
       <geom name="proj6_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj6_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj7" pos="0 0 -5.70">
       <freejoint name="proj7_free"/>
       <geom name="proj7_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj7_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj8" pos="0 0 -5.80">
       <freejoint name="proj8_free"/>
       <geom name="proj8_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj8_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj9" pos="0 0 -5.90">
       <freejoint name="proj9_free"/>
       <geom name="proj9_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj9_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj10" pos="0 0 -6.00">
       <freejoint name="proj10_free"/>
       <geom name="proj10_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj10_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj11" pos="0 0 -6.10">
       <freejoint name="proj11_free"/>
       <geom name="proj11_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj11_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj12" pos="0 0 -6.20">
       <freejoint name="proj12_free"/>
       <geom name="proj12_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj12_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj13" pos="0 0 -6.30">
       <freejoint name="proj13_free"/>
       <geom name="proj13_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj13_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj14" pos="0 0 -6.40">
       <freejoint name="proj14_free"/>
       <geom name="proj14_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj14_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj15" pos="0 0 -6.50">
       <freejoint name="proj15_free"/>
       <geom name="proj15_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj15_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj16" pos="0 0 -6.60">
       <freejoint name="proj16_free"/>
       <geom name="proj16_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj16_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj17" pos="0 0 -6.70">
       <freejoint name="proj17_free"/>
       <geom name="proj17_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj17_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj18" pos="0 0 -6.80">
       <freejoint name="proj18_free"/>
       <geom name="proj18_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj18_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj19" pos="0 0 -6.90">
       <freejoint name="proj19_free"/>
       <geom name="proj19_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj19_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj20" pos="0 0 -7.00">
       <freejoint name="proj20_free"/>
       <geom name="proj20_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj20_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj21" pos="0 0 -7.10">
       <freejoint name="proj21_free"/>
       <geom name="proj21_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj21_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj22" pos="0 0 -7.20">
       <freejoint name="proj22_free"/>
       <geom name="proj22_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj22_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <body name="proj23" pos="0 0 -7.30">
       <freejoint name="proj23_free"/>
       <geom name="proj23_geom" type="sphere" size="0.0085" mass="0.0032" material="tracer" condim="4" contype="3" conaffinity="3" friction="2.2 0.01 0.0005" solref="0.002 1" solimp="0.95 0.99 0.0005" fluidshape="ellipsoid" fluidcoef="0.47 0.25 1.5 1.0 1.0"/>
-      <light name="proj23_glow" mode="track" diffuse="0.10 0.34 0.05" specular="0 0 0" attenuation="1 0 6" pos="0 0 0"/>
     </body>
     <camera name="track_chase" mode="trackcom" pos="-1.6 -1.6 1.15" xyaxes="0.707 -0.707 0 0.3 0.3 0.9"/>
     <camera name="track_side" mode="trackcom" pos="0 -2.4 0.75" xyaxes="1 0 0 0 0.35 0.94"/>
