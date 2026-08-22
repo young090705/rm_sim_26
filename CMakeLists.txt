@@ -19,6 +19,11 @@ foreach(_dir IN LISTS _install_dirs)
   endif()
 endforeach()
 
+install(
+  PROGRAMS scripts/omni_drive.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
