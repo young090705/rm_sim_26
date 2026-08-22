@@ -29,6 +29,10 @@ class Projectile:
     # 弹丸过摩擦轮时的步长。轮速 900 rad/s 下 dt=1ms 每步转 51°、接触点划过
     # 27mm(比弹丸直径还大), 摩擦求解失真。触发条件见 viewer._near_friction_wheels。
     launch_dt: float = 2.0e-5
+    # 弹仓
+    feeder_speed: float = 12.0        # 拨弹盘转速 rad/s, 决定供弹率
+    auto_refill: bool = True          # 弹仓少于 refill_below 时自动补满
+    refill_below: int = 20
 
 
 @dataclass(frozen=True)

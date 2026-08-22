@@ -30,7 +30,9 @@ class Controller:
         self.jid.update({n: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, n)
                          for n in FRIC_JOINTS})
         self.aid.update({n: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, f'{n}_vel')
-                         for n in FRIC_JOINTS})
+                         for n in FRIC_JOINTS + ('feeder_joint',)})
+        self.jid.update({'feeder_joint': mujoco.mj_name2id(
+            model, mujoco.mjtObj.mjOBJ_JOINT, 'feeder_joint')})
         self.fric_on = True
         self.target = {n: 0.0 for n in GIMBAL_JOINTS}
         self.cmd_vel = np.zeros(3)          # vx, vy, wz (机体系)
@@ -108,8 +110,15 @@ class Controller:
         return all(abs(abs(self.qvel(j)) - w) < tol * w
                    for j in FRIC_JOINTS if self.jid.get(j, -1) >= 0)
 
+    def apply_feeder(self, cfg):
+        """拨弹盘恒速. 转速决定供弹率, 是可辨识量。"""
+        a = self.aid.get('feeder_joint', -1)
+        if a >= 0:
+            self.d.ctrl[a] = cfg.projectile.feeder_speed if self.fric_on else 0.0
+
     def step(self, cfg, dt: float):
         self.update_scan(cfg, dt)
         self.apply_gimbal(cfg)
         self.apply_chassis(cfg)
         self.apply_friction_wheels(cfg)
+        self.apply_feeder(cfg)

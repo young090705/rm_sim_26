@@ -15,6 +15,11 @@ cooldown_s = 0.12
 # ——比弹丸直径还大, 摩擦求解失真, 初速会虚高 36%。步长收敛检验见 README。
 launch_dt = 2.0e-5
 
+# 弹仓与拨弹盘
+feeder_speed = 12.0     # 拨弹盘转速 rad/s (2006 电机), 决定供弹率
+auto_refill = true      # 仓内不足 refill_below 时自动补满
+refill_below = 20
+
 [gimbal]
 big_yaw_kp = 40.0
 big_yaw_kd = 4.0

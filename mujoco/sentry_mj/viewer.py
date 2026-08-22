@@ -11,8 +11,9 @@
   7            发射一发
   8            连发开关
   9            摩擦轮启停
+  .            一键装满弹仓
   -            复位
-  =            打印状态(位姿、关节角、轮速、弹丸数)
+  =            打印状态(位姿、关节角、轮速、弹仓)
 """
 from __future__ import annotations
 
@@ -58,6 +59,7 @@ class Sim:
         self.view_idx = 1
         self.firing = False
         self._base_dt = float(self.m.opt.timestep)
+        self._feeder_bid = mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, 'feeder')
         self._fric_bids = [b for b in
                            (mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, n)
                             for n in ('fric_left', 'fric_right')) if b >= 0]
@@ -72,6 +74,19 @@ class Sim:
             self.ctrl.target[j] = 0.0
         self.ctrl.cmd_vel[:] = 0.0
         mujoco.mj_forward(self.m, self.d)
+        self.reload()
+
+    # ---- 弹仓 ----
+    def _mag_center(self):
+        return self.d.xpos[self._feeder_bid].copy()
+
+    def reload(self) -> int:
+        """一键装满弹仓"""
+        mujoco.mj_forward(self.m, self.d)
+        return self.pool.load_magazine(self._mag_center(), 0.075, rng=self.rng)
+
+    def mag_count(self) -> int:
+        return self.pool.in_magazine(self._mag_center(), 0.078)
 
     # ---- 发射 ----
     def fire_one(self) -> tuple[bool, str]:
@@ -135,6 +150,9 @@ class Sim:
         elif ch == '-':                     # 复位
             self.reset()
             print('[复位]')
+        elif ch == '.':                     # 一键装满弹仓
+            n = self.reload()
+            print(f'[装弹] 补入 {n} 发, 仓内 {self.mag_count()}')
         elif ch == '=':                     # 打印状态
             self.dump()
 
@@ -146,7 +164,7 @@ class Sim:
                   f'v={self.ctrl.qvel(j):7.3f}rad/s')
         for j in ('fric_left_joint', 'fric_right_joint'):
             print(f'  {j:16s} w={self.ctrl.qvel(j):8.1f} rad/s')
-        print(f'  弹丸存活 {self.pool.alive_count}/{self.pool.n}')
+        print(f'  弹仓 {self.mag_count()} 发   飞行中/存活 {self.pool.alive_count}/{self.pool.n}')
 
     def _poll_hold(self, viewer):
         """MuJoCo 被动查看器只给按下事件, 持续操作用目标值累积实现"""
@@ -176,6 +194,9 @@ class Sim:
                     self.cfg = self.cfg.reload_if_changed()
                     last_cfg_check = self.d.time
 
+                if self.cfg.projectile.auto_refill and \
+                        self.mag_count() < self.cfg.projectile.refill_below:
+                    self.reload()
                 if self.firing:
                     self.fire_one()          # 连发时冷却自然限流, 失败无需提示
                 self._advance(dt * steps_per_frame)
@@ -250,7 +271,7 @@ def main():
     sim = Sim(args.model, args.config)
     sim.view_idx = max(0, min(args.view - 1, len(VIEWS) - 1))
     print('视角:', '  '.join(f'{i + 1}={n}' for i, (n, _) in enumerate(VIEWS)))
-    print('7 发射   8 连发   0 切视角   9 摩擦轮   - 复位   = 状态')
+    print('7 发射   8 连发   0 切视角   9 摩擦轮   . 装弹   - 复位   = 状态')
     print('(字母键全被 MuJoCo 查看器占用为可视化开关, 故只用数字/符号)')
     sim.run(duration=args.duration, render_hz=args.render_hz)
 

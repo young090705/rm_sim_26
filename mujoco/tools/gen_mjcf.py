@@ -357,6 +357,56 @@ def build():
                         size='0.26 0.17', pos='0 0 0.20')
     gc2.set('class', 'collision')
 
+    # ---------- 送弹机构: 弹仓斗 + 拨弹盘 ----------
+    # 位置取自 CAD: 拨弹盘中心 (-22.9, -27.7, 56.3) mm, 盘面法向竖直, 直径约 105mm,
+    # 由下方 2006 电机驱动。弹仓在其上方, 弹丸靠自重落到盘上, 由拨齿带走。
+    # 碰撞组用 4/4, 与弹丸(3/3)相交 -> 可碰; 与机体(1/1)不相交 -> 不干扰底盘接触。
+    fx, fy, fz = FEEDER_POS
+    # 弹仓斗单独建 body: 它若挂在 gimbal_link 上, 会被 proj<->gimbal_link 的
+    # contact exclude 一并屏蔽, 弹丸直接穿过斗底掉到地上。
+    hop = ET.SubElement(gim, 'body', name='hopper', pos='0 0 0')
+    ET.SubElement(hop, 'inertial', pos=fmt(FEEDER_POS), mass='0.12',
+                  diaginertia='4e-4 4e-4 6e-4')
+
+    # 斗底: 中心开孔让弹丸落到拨弹盘上, 用一圈盒子近似圆环
+    for i in range(12):
+        a = 2 * np.pi * i / 12
+        rr = FEEDER_R + 0.018
+        g = ET.SubElement(hop, 'geom', name=f'hopper_floor{i}', type='box',
+                          size='0.020 0.020 0.004',
+                          pos=fmt([fx + rr * np.cos(a), fy + rr * np.sin(a), fz - 0.006]),
+                          quat=fmt(rpy_to_quat(0, 0, a)), material='printed')
+        g.set('contype', '4'); g.set('conaffinity', '4'); g.set('group', '3')
+    # 斗壁
+    for i in range(16):
+        a = 2 * np.pi * i / 16
+        g = ET.SubElement(hop, 'geom', name=f'hopper_wall{i}', type='box',
+                          size='0.003 0.016 ' + f'{HOPPER_H / 2:.4f}',
+                          pos=fmt([fx + HOPPER_R * np.cos(a), fy + HOPPER_R * np.sin(a),
+                                   fz + HOPPER_H / 2]),
+                          quat=fmt(rpy_to_quat(0, 0, a)), material='printed')
+        g.set('contype', '4'); g.set('conaffinity', '4'); g.set('group', '3')
+
+    # 拨弹盘: 轮毂 + N 个径向拨齿, 绕竖直轴, 2006 电机驱动
+    fb = ET.SubElement(gim, 'body', name='feeder', pos=fmt(FEEDER_POS))
+    ET.SubElement(fb, 'inertial', pos='0 0 0', mass='0.045',
+                  diaginertia='3.1e-5 3.1e-5 6.1e-5')
+    ET.SubElement(fb, 'joint', name='feeder_joint', type='hinge', axis='0 0 1',
+                  damping='1e-3', armature='2e-5')
+    # 整盘而非小轮毂: 弹丸要坐在盘面上, 拨齿只负责带动。早先只做了 0.42R 的
+    # 轮毂, 弹丸从轮毂与斗底环之间的空隙直接漏穿, 掉到地上。
+    hub = ET.SubElement(fb, 'geom', name='feeder_hub', type='cylinder',
+                        size=f'{FEEDER_R:.4f} 0.005', material='aluminium')
+    hub.set('contype', '4'); hub.set('conaffinity', '4'); hub.set('group', '3')
+    for i in range(FEEDER_PADDLES):
+        a = 2 * np.pi * i / FEEDER_PADDLES
+        pl = ET.SubElement(fb, 'geom', name=f'feeder_paddle{i}', type='box',
+                           size=f'{FEEDER_R * 0.30:.4f} 0.0025 {FEEDER_PADDLE_H:.4f}',
+                           pos=fmt([FEEDER_R * 0.68 * np.cos(a),
+                                    FEEDER_R * 0.68 * np.sin(a), FEEDER_PADDLE_H]),
+                           quat=fmt(rpy_to_quat(0, 0, a)), material='printed')
+        pl.set('contype', '4'); pl.set('conaffinity', '4'); pl.set('group', '3')
+
     # 雷达: 必须是 body 才带质量 —— 用 site 会丢掉 0.265 kg, 直接影响大yaw惯量。
     # MuJoCo 里无 joint 的 body 即刚性固连, 等价于 SDF 的 fixed joint。
     L_lidar = links['livox_lidar']
@@ -424,7 +474,7 @@ def build():
         ET.SubElement(pb, 'geom', name=f'proj{i}_geom', type='sphere',
                       size=f'{PROJ_RADIUS}', mass=f'{PROJ_MASS}',
                       material='tracer', condim='4',
-                      contype='3', conaffinity='3',
+                      contype='7', conaffinity='7',
                       friction='2.2 0.01 0.0005', solref='0.002 1',
                       solimp='0.95 0.99 0.0005',
                       fluidshape='ellipsoid', fluidcoef='0.47 0.25 1.5 1.0 1.0')
@@ -473,6 +523,11 @@ def build():
     for w in ('fric_left_joint', 'fric_right_joint'):
         ET.SubElement(act, 'velocity', name=f'{w}_vel', joint=w,
                       kv='0.05', ctrlrange='-1400 1400')
+    # 拨弹盘: 2006 电机, 速度伺服。转速决定供弹率, 是可辨识量。
+    # kv 要够大才能带动压在盘上的整仓弹丸: kv=0.02 时 90 发的重量把转速压到
+    # 0.4 rad/s(目标 12)。2006 减速后堵转扭矩约 1 N·m, 这里取 0.5 与之相称。
+    ET.SubElement(act, 'velocity', name='feeder_joint_vel', joint='feeder_joint',
+                  kv='0.5', ctrlrange='-60 60')
 
     # ---------- 传感器 (辨识用) ----------
     sen = ET.SubElement(root, 'sensor')
@@ -486,7 +541,7 @@ def build():
     ET.SubElement(sen, 'gyro', name='imu_gyro', site='gimbal_imu')
     ET.SubElement(sen, 'accelerometer', name='imu_acc', site='gimbal_imu')
     ET.SubElement(sen, 'framepos', name='muzzle_pos', objtype='site', objname='muzzle')
-    for w in ('fric_left_joint', 'fric_right_joint'):
+    for w in ('fric_left_joint', 'fric_right_joint', 'feeder_joint'):
         ET.SubElement(sen, 'jointvel', name=f'{w}_vel', joint=w)
 
     xml = minidom.parseString(ET.tostring(root, 'utf-8')).toprettyxml(indent='  ')
@@ -536,7 +591,17 @@ FRIC_W = 0.016            # 轮宽 m
 FRIC_MASS = 0.057
 FRIC_ARMATURE = 4.0e-5    # 3508 转子折算惯量, 待辨识
 
-N_PROJECTILE = 24
+# ---- 送弹机构 (CAD 实测, gimbal_link 系 ROS 米制) ----
+# 拨弹盘: 水平圆盘绕竖直轴转, 由下方 2006 电机驱动; 弹仓在其上方
+FEEDER_POS = np.array([-0.0229, -0.0277, 0.0563])
+FEEDER_R = 0.052          # 盘半径 (包围盒 103~110mm)
+FEEDER_PADDLES = 8        # 拨齿数
+FEEDER_PADDLE_H = 0.011   # 拨齿高度, 略低于弹丸直径以便单发拨出
+HOPPER_R = 0.075          # 弹仓斗内半径
+HOPPER_H = 0.090          # 斗高
+N_MAGAZINE = 20           # 预装弹丸数
+
+N_PROJECTILE = 90
 PROJ_RADIUS = 0.0085      # 17mm 弹丸
 PROJ_MASS = 0.0032        # 官方 17mm 弹丸 3.2 g
 
