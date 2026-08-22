@@ -368,8 +368,8 @@
     <motor name="wheel_rl_joint_trq" joint="wheel_rl_joint" gear="1" ctrlrange="-6 6"/>
     <motor name="wheel_rr_joint_trq" joint="wheel_rr_joint" gear="1" ctrlrange="-6 6"/>
     <motor name="wheel_fr_joint_trq" joint="wheel_fr_joint" gear="1" ctrlrange="-6 6"/>
-    <velocity name="fric_up_joint_vel" joint="fric_up_joint" kv="0.004" ctrlrange="-1200 1200"/>
-    <velocity name="fric_dn_joint_vel" joint="fric_dn_joint" kv="0.004" ctrlrange="-1200 1200"/>
+    <velocity name="fric_up_joint_vel" joint="fric_up_joint" kv="0.05" ctrlrange="-1400 1400"/>
+    <velocity name="fric_dn_joint_vel" joint="fric_dn_joint" kv="0.05" ctrlrange="-1400 1400"/>
   </actuator>
   <sensor>
     <jointpos name="big_yaw_joint_pos" joint="big_yaw_joint"/>

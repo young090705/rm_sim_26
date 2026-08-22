@@ -435,7 +435,7 @@ def build():
     # 摩擦轮用速度伺服: 真车是电调闭环控转速, 这里同构
     for w in ('fric_up_joint', 'fric_dn_joint'):
         ET.SubElement(act, 'velocity', name=f'{w}_vel', joint=w,
-                      kv='0.004', ctrlrange='-1200 1200')
+                      kv='0.05', ctrlrange='-1400 1400')
 
     # ---------- 传感器 (辨识用) ----------
     sen = ET.SubElement(root, 'sensor')
