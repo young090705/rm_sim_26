@@ -85,11 +85,24 @@ class Sim:
     # Space / Tab / Backspace / [ ] / Esc / F1-F5 / 方向键 由 MuJoCo 查看器占用,
     # 按下去不会传到这里, 所以自定义功能一律避开它们。
     def on_key(self, keycode: int):
+        """按键回调.
+
+        整段包在 try 里: 这个回调跑在 MuJoCo 的渲染线程上, 一旦抛异常整个渲染
+        循环就死了 —— 表现是窗口定格发白, 看着像图形 bug, 其实是回调崩了。
+        """
+        try:
+            self._handle_key(keycode)
+        except Exception as exc:                        # noqa: BLE001
+            print(f'[按键处理异常] {type(exc).__name__}: {exc}')
+
+    def _handle_key(self, keycode: int):
         ch = chr(keycode).upper() if 32 <= keycode < 127 else ''
         if ch == 'V':                       # 切视角
             self.view_idx = (self.view_idx + 1) % len(VIEWS)
             print(f'[视角] {self.view_idx + 1}/{len(VIEWS)} {VIEWS[self.view_idx][0]}')
-        elif ch in '123456':
+        # 必须先判 ch 非空: Python 里 '' in '123456' 是 True(空串是任何串的子串),
+        # 方向键/Shift 等非可打印键会走进这一支, int('') 直接抛异常。
+        elif ch and ch in '123456':
             i = int(ch) - 1
             if i < len(VIEWS):
                 self.view_idx = i
