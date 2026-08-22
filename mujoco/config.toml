@@ -1,0 +1,27 @@
+# 仿真运行时保存本文件即刻生效, 无需重启。
+# 解析失败时沿用当前参数。
+
+[projectile]
+muzzle_speed = 25.0     # m/s
+spin_rpm = 0.0          # 出膛自旋, 非零可观察马格努斯效应对落点的影响
+spread_deg = 0.15       # 散布 sigma
+life_s = 6.0
+cooldown_s = 0.10
+
+[gimbal]
+big_yaw_kp = 40.0
+big_yaw_kd = 4.0
+small_yaw_kp = 8.0
+small_yaw_kd = 0.5
+pitch_kp = 6.0
+pitch_kd = 0.4
+scan_enabled = false
+scan_yaw_speed = 0.4
+scan_pitch_range = [-0.2, 0.35]
+scan_pitch_speed = 0.5
+
+[chassis]
+wheel_radius = 0.076
+mount_radius = 0.245
+max_wheel_torque = 6.0
+drive_kp = 1.2
