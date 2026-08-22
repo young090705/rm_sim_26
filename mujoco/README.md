@@ -16,13 +16,17 @@
 ```bash
 cd mujoco
 uv venv && uv pip install -e .
-uv pip install trimesh              # 只有首次生成网格需要
-uv run python tools/glb_to_obj.py   # GLB -> OBJ, 约 50MB, 不入库
-uv run python tools/gen_mjcf.py     # 生成 models/sentry.xml
-uv run python tools/verify_against_sdf.py   # 确认与 SDF 一致
+uv run sentry-mj                    # 直接跑，模型与网格都已入库
 ```
 
-网格 OBJ 由 GLB 派生、体积大，因此不入库；`models/sentry.xml` 入库但依赖这些 OBJ，克隆后需先跑上面两步。
+改了 `../models/sentry/model.sdf` 之后重新生成：
+
+```bash
+uv pip install trimesh
+uv run python tools/glb_to_obj.py           # GLB -> OBJ
+uv run python tools/gen_mjcf.py             # -> models/sentry.xml
+uv run python tools/verify_against_sdf.py   # 确认与 SDF 一致
+```
 
 ## 运行
 
