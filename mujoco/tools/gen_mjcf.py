@@ -344,10 +344,17 @@ def build():
     syaw = chain_body(gim, 'small_yaw_joint', 'small_yaw_link')
     pitch = chain_body(syaw, 'pitch_joint', 'pitch_link')
 
-    # 枪口 site: 弹丸出膛点, 由此 site 的世界位姿决定初速方向
-    ET.SubElement(pitch, 'site', name='muzzle', pos='0 0.26 0.14',
+    # 枪口 site: 弹丸出膛点, site 的 +Z 即初速方向。
+    # 位置取自 CAD —— RM18 裁判系统测速模块在 pitch_link 系的中心
+    # (-23.0, 257.3, -54.3) mm。弹丸必须穿过该模块, 裁判系统靠它测初速;
+    # 位置估错的话弹道看起来会从模块旁边飞出去。
+    ET.SubElement(pitch, 'site', name='muzzle',
+                  pos=fmt(MUZZLE_POS),
                   quat=fmt(rpy_to_quat(-np.pi / 2, 0, 0)),
                   size='0.006', rgba='1 0.35 0.1 0.9')
+    # 测速模块中心, 便于可视化确认弹道确实穿过它
+    ET.SubElement(pitch, 'site', name='chrono', pos=fmt(CHRONO_POS),
+                  size='0.009', rgba='0.2 1 0.4 0.35')
     # 自瞄相机 (第一人称视角)
     ET.SubElement(pitch, 'camera', name='gimbal_cam', pos='-0.0017 0.1395 0.0531',
                   quat=fmt(rpy_to_quat(np.pi / 2, 0, np.pi)), fovy='48')
@@ -424,6 +431,14 @@ def build():
 # armature = 折算转子惯量 N^2*J_rotor, 待辨识量的初值; 0 则退化为纯 CAD 刚体
 ARMATURE_GIMBAL = 0.004
 ARMATURE_WHEEL = 0.002
+
+# RM18 裁判系统测速模块在 pitch_link 系的中心 (CAD 实测, ROS 米制)。
+# 弹丸必须沿该模块的中心线穿过 —— 真车靠它测初速, 位置或方向偏了都不对。
+# 模块本体 Z 轴在 pitch 系映射为 (0,-1,0), 故中心线沿 ±Y, 发射方向为 +Y。
+CHRONO_POS = np.array([-0.0230, 0.2573, -0.0543])
+CHRONO_AXIS = np.array([0.0, 1.0, 0.0])
+# 枪口置于中心线上、模块后方 60mm, 使弹丸自后向前贯穿模块
+MUZZLE_POS = CHRONO_POS - CHRONO_AXIS * 0.060
 
 N_PROJECTILE = 24
 PROJ_RADIUS = 0.0085      # 17mm 弹丸
