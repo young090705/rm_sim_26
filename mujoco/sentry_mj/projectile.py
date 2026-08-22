@@ -57,38 +57,44 @@ class ProjectilePool:
         self._last_shot = -1e9
 
     # ---- 对外 ----
-    def fire(self, cfg, rng: np.random.Generator | None = None) -> bool:
-        """从 muzzle site 发射一发. 冷却未到返回 False。"""
+    def feed(self, cfg, rng: np.random.Generator | None = None) -> int | None:
+        """送弹: 把一发放到摩擦轮入口, 给一点推弹速度。
+
+        真车是拨弹盘把弹丸送进两个摩擦轮之间, 由轮子摩擦加速出膛 —— 初速不是
+        设定值, 而是轮速的结果。所以这里只负责"喂进去", 加速交给接触求解器。
+
+        返回弹丸槽位; 冷却未到返回 None。
+        """
         t = self.d.time
         if t - self._last_shot < cfg.cooldown_s:
-            return False
+            return None
         rng = rng or np.random.default_rng()
 
         pos = self.d.site_xpos[self.muzzle_sid].copy()
         R = self.d.site_xmat[self.muzzle_sid].reshape(3, 3)
-        forward = R[:, 2]                       # site 的 +Z 为出膛方向
+        forward = R[:, 2]
 
         if cfg.spread_deg > 0:
             sig = math.radians(cfg.spread_deg)
-            perp1 = R[:, 0]
-            perp2 = R[:, 1]
-            forward = forward + perp1 * rng.normal(0, sig) + perp2 * rng.normal(0, sig)
-            forward /= np.linalg.norm(forward)
+            pos = pos + R[:, 0] * rng.normal(0, sig * 0.004) \
+                      + R[:, 1] * rng.normal(0, sig * 0.004)
 
         k = self._next
         self._next = (self._next + 1) % self.n
         qa, va = self.qadr[k], self.vadr[k]
-        # 出膛点前移一个半径, 避免与枪管几何初始穿透
-        self.d.qpos[qa:qa + 3] = pos + forward * 0.012
+        # 放在摩擦轮入口后方, 沿膛线推进
+        self.d.qpos[qa:qa + 3] = pos - forward * cfg.feed_offset
         self.d.qpos[qa + 3:qa + 7] = (1.0, 0.0, 0.0, 0.0)
-        self.d.qvel[va:va + 3] = forward * cfg.muzzle_speed
-        # 自旋绕出膛轴, 用于观察马格努斯效应
-        spin = cfg.spin_rpm * 2.0 * math.pi / 60.0
-        self.d.qvel[va + 3:va + 6] = forward * spin
+        self.d.qvel[va:va + 3] = forward * cfg.feed_speed
+        self.d.qvel[va + 3:va + 6] = 0.0
         self._fired_at[k] = t
         self._alive[k] = True
         self._last_shot = t
-        return True
+        return k
+
+    def fire(self, cfg, rng: np.random.Generator | None = None) -> bool:
+        """兼容旧接口: 送弹即视为发射"""
+        return self.feed(cfg, rng) is not None
 
     def update(self, cfg):
         """回收超时或已落到地面以下的弹丸"""

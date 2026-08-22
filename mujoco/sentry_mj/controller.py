@@ -8,6 +8,9 @@ import numpy as np
 
 GIMBAL_JOINTS = ('big_yaw_joint', 'small_yaw_joint', 'pitch_joint')
 WHEEL_JOINTS = ('wheel_fl_joint', 'wheel_rl_joint', 'wheel_rr_joint', 'wheel_fr_joint')
+FRIC_JOINTS = ('fric_up_joint', 'fric_dn_joint')
+# 上轮正转、下轮反转, 两者接触面才都朝 +Y(前方)
+FRIC_SIGN = {'fric_up_joint': +1.0, 'fric_dn_joint': -1.0}
 # 轮位角, 与 scripts/omni_drive.py 保持一致
 WHEEL_ANGLE = (math.radians(45), math.radians(135), math.radians(-135), math.radians(-45))
 WHEEL_SIGN = -1.0
@@ -20,6 +23,12 @@ class Controller:
                     for n in GIMBAL_JOINTS + WHEEL_JOINTS}
         self.aid = {n: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, f'{n}_trq')
                     for n in GIMBAL_JOINTS + WHEEL_JOINTS}
+        # 摩擦轮走速度伺服, 执行器后缀是 _vel 而非 _trq
+        self.jid.update({n: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, n)
+                         for n in FRIC_JOINTS})
+        self.aid.update({n: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, f'{n}_vel')
+                         for n in FRIC_JOINTS})
+        self.fric_on = True
         self.target = {n: 0.0 for n in GIMBAL_JOINTS}
         self.cmd_vel = np.zeros(3)          # vx, vy, wz (机体系)
         self._scan_t = 0.0
@@ -79,7 +88,25 @@ class Controller:
             self.d.ctrl[a] = np.clip(c.drive_kp * (w_target - self.qvel(j)),
                                      -c.max_wheel_torque, c.max_wheel_torque)
 
+    # ---- 摩擦轮 ----
+    def apply_friction_wheels(self, cfg):
+        """恒速伺服. 上下轮反向, 使两者接触面都朝 +Y 把弹丸向前推。"""
+        w = cfg.projectile.fric_speed if self.fric_on else 0.0
+        for j in FRIC_JOINTS:
+            a = self.aid.get(j, -1)
+            if a >= 0:
+                self.d.ctrl[a] = FRIC_SIGN[j] * w
+
+    def fric_ready(self, cfg, tol: float = 0.05) -> bool:
+        """转速是否达标 —— 真车同样要等摩擦轮转起来才能打, 否则初速不足"""
+        w = cfg.projectile.fric_speed
+        if w <= 0:
+            return False
+        return all(abs(abs(self.qvel(j)) - w) < tol * w
+                   for j in FRIC_JOINTS if self.jid.get(j, -1) >= 0)
+
     def step(self, cfg, dt: float):
         self.update_scan(cfg, dt)
         self.apply_gimbal(cfg)
         self.apply_chassis(cfg)
+        self.apply_friction_wheels(cfg)

@@ -355,6 +355,30 @@ def build():
     # 测速模块中心, 便于可视化确认弹道确实穿过它
     ET.SubElement(pitch, 'site', name='chrono', pos=fmt(CHRONO_POS),
                   size='0.009', rgba='0.2 1 0.4 0.35')
+
+    # ---------- 摩擦轮 ----------
+    # 上下两轮夹住弹丸靠摩擦加速, 与真车一致 —— 初速不是设定值, 而是轮速的结果。
+    # 尺寸取自 CAD: 摩擦轮 57 g, ρ=1602(聚氨酯), 由惯量反推半径约 30 mm。
+    # 轮轴沿 pitch 系 X(垂直于膛线且水平)。上轮 ω>0、下轮 ω<0 时接触面均向 +Y,
+    # 即把弹丸向前推。
+    for name, sgn in (('fric_up', +1), ('fric_dn', -1)):
+        c = CHRONO_POS + np.array([0.0, 0.0, sgn * (FRIC_GAP / 2 + FRIC_R)])
+        c = c - CHRONO_AXIS * FRIC_BACK
+        wb = ET.SubElement(pitch, 'body', name=name, pos=fmt(c))
+        ET.SubElement(wb, 'inertial', pos='0 0 0', mass=f'{FRIC_MASS}',
+                      diaginertia=fmt([1.78e-5, 3.08e-5, 1.78e-5]))
+        ET.SubElement(wb, 'joint', name=f'{name}_joint', type='hinge',
+                      axis='1 0 0', damping='2e-4', armature=str(FRIC_ARMATURE))
+        # 轮子朝向: 圆柱默认沿 Z, 绕 Y 转 90° 使其轴向沿 X
+        gv = ET.SubElement(wb, 'geom', name=f'{name}_geom', type='cylinder',
+                           size=f'{FRIC_R} {FRIC_W / 2}',
+                           quat=fmt(rpy_to_quat(0, np.pi / 2, 0)),
+                           material='roller', mass=f'{FRIC_MASS}',
+                           condim='4', priority='2',
+                           friction='2.2 0.01 0.0005',
+                           solref='0.002 1', solimp='0.95 0.99 0.0005')
+        gv.set('contype', '2')
+        gv.set('conaffinity', '2')       # 只与弹丸(同组)碰, 不与机体碰
     # 自瞄相机 (第一人称视角)
     ET.SubElement(pitch, 'camera', name='gimbal_cam', pos='-0.0017 0.1395 0.0531',
                   quat=fmt(rpy_to_quat(np.pi / 2, 0, np.pi)), fovy='48')
@@ -369,7 +393,9 @@ def build():
         ET.SubElement(pb, 'geom', name=f'proj{i}_geom', type='sphere',
                       size=f'{PROJ_RADIUS}', mass=f'{PROJ_MASS}',
                       material='tracer', condim='4',
-                      friction='0.4 0.005 0.0001', solref='0.004 1', solimp='0.9 0.95 0.001',
+                      contype='3', conaffinity='3',
+                      friction='2.2 0.01 0.0005', solref='0.002 1',
+                      solimp='0.95 0.99 0.0005',
                       fluidshape='ellipsoid', fluidcoef='0.47 0.25 1.5 1.0 1.0')
         ET.SubElement(pb, 'light', name=f'proj{i}_glow', mode='track',
                       diffuse='0.10 0.34 0.05', specular='0 0 0',
@@ -406,6 +432,10 @@ def build():
     for w in ('wheel_fl_joint', 'wheel_rl_joint', 'wheel_rr_joint', 'wheel_fr_joint'):
         ET.SubElement(act, 'motor', name=f'{w}_trq', joint=w,
                       gear='1', ctrlrange='-6 6')
+    # 摩擦轮用速度伺服: 真车是电调闭环控转速, 这里同构
+    for w in ('fric_up_joint', 'fric_dn_joint'):
+        ET.SubElement(act, 'velocity', name=f'{w}_vel', joint=w,
+                      kv='0.004', ctrlrange='-1200 1200')
 
     # ---------- 传感器 (辨识用) ----------
     sen = ET.SubElement(root, 'sensor')
@@ -419,6 +449,8 @@ def build():
     ET.SubElement(sen, 'gyro', name='imu_gyro', site='gimbal_imu')
     ET.SubElement(sen, 'accelerometer', name='imu_acc', site='gimbal_imu')
     ET.SubElement(sen, 'framepos', name='muzzle_pos', objtype='site', objname='muzzle')
+    for w in ('fric_up_joint', 'fric_dn_joint'):
+        ET.SubElement(sen, 'jointvel', name=f'{w}_vel', joint=w)
 
     xml = minidom.parseString(ET.tostring(root, 'utf-8')).toprettyxml(indent='  ')
     xml = '\n'.join(line for line in xml.split('\n') if line.strip())
@@ -439,6 +471,14 @@ CHRONO_POS = np.array([-0.0230, 0.2573, -0.0543])
 CHRONO_AXIS = np.array([0.0, 1.0, 0.0])
 # 枪口置于中心线上、模块后方 60mm, 使弹丸自后向前贯穿模块
 MUZZLE_POS = CHRONO_POS - CHRONO_AXIS * 0.060
+
+# 摩擦轮 (CAD: 57 g, ρ=1602 聚氨酯; 由惯量反推半径 ~30 mm, 与常见 60 mm 轮一致)
+FRIC_R = 0.030            # 轮半径 m
+FRIC_W = 0.016            # 轮宽 m
+FRIC_MASS = 0.057
+FRIC_GAP = 0.0158         # 上下轮间隙, 略小于弹丸直径 17 mm -> 压缩约 1.2 mm
+FRIC_BACK = 0.070         # 轮心相对测速模块中心后移量 m
+FRIC_ARMATURE = 4.0e-5    # 3508 转子折算惯量, 待辨识
 
 N_PROJECTILE = 24
 PROJ_RADIUS = 0.0085      # 17mm 弹丸

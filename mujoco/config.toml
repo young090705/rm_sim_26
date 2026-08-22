@@ -2,11 +2,18 @@
 # 解析失败时沿用当前参数。
 
 [projectile]
-muzzle_speed = 25.0     # m/s
-spin_rpm = 0.0          # 出膛自旋, 非零可观察马格努斯效应对落点的影响
-spread_deg = 0.15       # 散布 sigma
+# 初速不是设定值 —— 弹丸由两个摩擦轮夹住加速, 出膛速度是仿真的结果。
+# 要改初速就改这里的轮速: 理论上 v ≈ ω × 0.030 m, 实际因打滑略低。
+fric_speed = 900.0      # 摩擦轮目标转速 rad/s (900 -> 轮面 27 m/s)
+feed_speed = 2.0        # 拨弹推进速度 m/s
+feed_offset = 0.045     # 送弹点相对枪口 site 的后移量 m
+spread_deg = 0.15       # 送弹位置扰动
 life_s = 6.0
-cooldown_s = 0.10
+cooldown_s = 0.12
+
+# 弹丸经过摩擦轮时的步长。轮速 900 rad/s 下 dt=1ms 每步转 51°、接触点划过 27 mm
+# ——比弹丸直径还大, 摩擦求解失真, 初速会虚高 36%。步长收敛检验见 README。
+launch_dt = 2.0e-5
 
 [gimbal]
 big_yaw_kp = 40.0

@@ -15,12 +15,20 @@ DEFAULT_PATH = os.path.normpath(os.path.join(HERE, '..', 'config.toml'))
 
 @dataclass(frozen=True)
 class Projectile:
-    """17mm 弹丸. 质量与半径由 MJCF 固定, 这里是发射参数。"""
-    muzzle_speed: float = 25.0        # m/s, 裁判系统 17mm 常见限速
-    spin_rpm: float = 0.0             # 出膛自旋, 用于观察马格努斯效应
-    spread_deg: float = 0.15          # 散布(高斯 sigma)
+    """17mm 弹丸的送弹与摩擦轮参数.
+
+    这里没有 muzzle_speed —— 初速由摩擦轮转速决定, 是仿真出来的结果而不是输入。
+    要改初速就改 fric_speed: 理论上 v ≈ ω·r, r=0.030 m, 实际因打滑略低。
+    """
+    fric_speed: float = 900.0         # 摩擦轮目标转速 rad/s
+    feed_speed: float = 2.0           # 拨弹推进速度 m/s
+    feed_offset: float = 0.045        # 送弹点相对枪口 site 的后移量 m
+    spread_deg: float = 0.15          # 送弹位置扰动
     life_s: float = 6.0               # 存活时间, 超时回收
-    cooldown_s: float = 0.10          # 射击间隔
+    cooldown_s: float = 0.12          # 射击间隔
+    # 弹丸过摩擦轮时的步长。轮速 900 rad/s 下 dt=1ms 每步转 51°、接触点划过
+    # 27mm(比弹丸直径还大), 摩擦求解失真。触发条件见 viewer._near_friction_wheels。
+    launch_dt: float = 2.0e-5
 
 
 @dataclass(frozen=True)

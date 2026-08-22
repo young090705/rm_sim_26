@@ -37,8 +37,25 @@ def sdf_values():
     return vals, total
 
 
+# MJCF 独有、源 SDF 中不存在的 body。摩擦轮在 CAD 总装里没被插入(零件文件有,
+# 装配体没引用), 但真车确实装了, 所以 MJCF 里建了 —— 比对时临时移除, 否则
+# pitch 惯量会因这 114 g 差出 30%, 掩盖真正的转换错误。
+MJCF_ONLY_BODIES = ('fric_up', 'fric_dn')
+
+
+def load_comparable(path: str) -> mujoco.MjModel:
+    """移除 MJCF 独有的 body, 得到与 SDF 可比的模型"""
+    spec = mujoco.MjSpec.from_file(path)
+    for name in MJCF_ONLY_BODIES:
+        try:
+            spec.delete(spec.body(name))
+        except (KeyError, ValueError):
+            pass
+    return spec.compile()
+
+
 def main():
-    m = mujoco.MjModel.from_xml_path(MJCF)
+    m = load_comparable(MJCF)
     d = mujoco.MjData(m)
     mujoco.mj_forward(m, d)
 
