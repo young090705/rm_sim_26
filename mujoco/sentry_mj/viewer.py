@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import sys
 import time
 
 import mujoco
@@ -102,8 +103,16 @@ class Sim:
         pass
 
     # ---- 主循环 ----
-    def run(self, duration: float | None = None, realtime: bool = True):
+    def run(self, duration: float | None = None, realtime: bool = True,
+            render_hz: float = 60.0):
+        """物理与渲染解耦: 物理跑 1 kHz, 画面 60 Hz.
+
+        每个物理步都 sync() 会让帧率被渲染拖到 43 Hz —— 本模型 84 个 geom、
+        93 万面, 单帧渲染远比单步物理贵。按 render_hz 折算出每帧的物理步数,
+        实时性与画面都正常。
+        """
         dt = self.m.opt.timestep
+        steps_per_frame = max(1, int(round(1.0 / (render_hz * dt))))
         last_cfg_check = 0.0
         with mujoco.viewer.launch_passive(
                 self.m, self.d, key_callback=self.on_key,
@@ -116,11 +125,12 @@ class Sim:
                 if self.d.time - last_cfg_check > 0.4:
                     self.cfg = self.cfg.reload_if_changed()
                     last_cfg_check = self.d.time
-                if self.firing:
-                    self.pool.fire(self.cfg.projectile, self.rng)
 
-                self.ctrl.step(self.cfg, dt)
-                mujoco.mj_step(self.m, self.d)
+                for _ in range(steps_per_frame):
+                    if self.firing:
+                        self.pool.fire(self.cfg.projectile, self.rng)
+                    self.ctrl.step(self.cfg, dt)
+                    mujoco.mj_step(self.m, self.d)
                 self.pool.update(self.cfg.projectile)
 
                 self._apply_view(v)
@@ -147,13 +157,20 @@ def main():
     ap.add_argument('--config', default=None)
     ap.add_argument('--duration', type=float, default=None)
     ap.add_argument('--view', type=int, default=1, help='初始视角 1..6')
+    ap.add_argument('--render-hz', type=float, default=60.0,
+                    help='画面刷新率; 物理恒为 1/timestep')
     args = ap.parse_args()
 
     sim = Sim(args.model, args.config)
     sim.view_idx = max(0, min(args.view - 1, len(VIEWS) - 1))
     print('视角:', '  '.join(f'{i + 1}={n}' for i, (n, _) in enumerate(VIEWS)))
     print('Space 发射   F 连发   Tab 切视角   R 复位   P 打印状态')
-    sim.run(duration=args.duration)
+    sim.run(duration=args.duration, render_hz=args.render_hz)
+
+    # GLFW 在部分 NVIDIA 驱动上关窗时会段错误(X 连接名被写坏), 与模型无关 ——
+    # 最简模型同样复现。仿真本身已跑完, 这里跳过会崩的清理路径直接退出。
+    sys.stdout.flush()
+    os._exit(0)
 
 
 if __name__ == '__main__':
