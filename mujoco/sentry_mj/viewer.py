@@ -72,14 +72,20 @@ class Sim:
         mujoco.mj_forward(self.m, self.d)
 
     # ---- 发射 ----
-    def fire_one(self) -> bool:
+    def fire_one(self) -> tuple[bool, str]:
         """送一发弹进摩擦轮. 加速交给接触求解器, 初速是结果不是输入.
 
-        摩擦轮没转到位就不打 —— 真车同理, 否则初速不足。
+        返回 (是否发射, 未发射原因). 之前只返回 bool, 调用方一律按"摩擦轮没转到位"
+        提示, 于是冷却拒绝也被报成转速不足 —— 日志里出现 "未发射 摩擦轮 896/900"
+        这种自相矛盾的行(896 相对 900 只差 0.4%, 明明是就绪的)。
         """
         if not self.ctrl.fric_ready(self.cfg):
-            return False
-        return self.pool.feed(self.cfg.projectile, self.rng) is not None
+            w = abs(self.ctrl.qvel('fric_left_joint'))
+            return False, f'摩擦轮未达转速 {w:.0f}/{self.cfg.projectile.fric_speed:.0f} rad/s'
+        if self.pool.feed(self.cfg.projectile, self.rng) is None:
+            left = self.cfg.projectile.cooldown_s - (self.d.time - self.pool._last_shot)
+            return False, f'冷却中, 还需 {max(left, 0):.2f}s'
+        return True, ''
 
     # ---- 输入 ----
     # Space / Tab / Backspace / [ ] / Esc / F1-F5 / 方向键 由 MuJoCo 查看器占用,
@@ -108,11 +114,11 @@ class Sim:
                 self.view_idx = i
                 print(f'[视角] {VIEWS[i][0]}')
         elif ch == 'X':                     # 单发
-            if self.fire_one():
+            ok, why = self.fire_one()
+            if ok:
                 print(f'[发射] 存活 {self.pool.alive_count}')
-            else:
-                w = abs(self.ctrl.qvel('fric_left_joint'))
-                print(f'[未发射] 摩擦轮 {w:.0f}/{self.cfg.projectile.fric_speed:.0f} rad/s')
+            elif why:
+                print(f'[未发射] {why}')
         elif ch == 'B':                     # 连发
             self.firing = not self.firing
             print(f'[连发] {"开" if self.firing else "关"}')
@@ -164,7 +170,7 @@ class Sim:
                     last_cfg_check = self.d.time
 
                 if self.firing:
-                    self.fire_one()
+                    self.fire_one()          # 连发时冷却自然限流, 失败无需提示
                 self._advance(dt * steps_per_frame)
                 self.pool.update(self.cfg.projectile)
 

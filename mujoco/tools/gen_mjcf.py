@@ -209,8 +209,12 @@ def build():
     ET.SubElement(vis, 'headlight', ambient='0.45 0.45 0.45',
                   diffuse='0.55 0.55 0.55', specular='0.2 0.2 0.2')
     ET.SubElement(vis, 'rgba', haze='0.87 0.90 0.94 1')
-    ET.SubElement(vis, 'quality', shadowsize='4096', offsamples='8')
-    ET.SubElement(vis, 'map', znear='0.01', zfar='60')
+    # znear/zfar 之比决定深度缓冲精度。原来 0.01/60 是 6000:1, 精度严重不足,
+    # 是阴影瑕疵与大面积错误着色的经典诱因(交互查看器上表现为地面整片发白,
+    # 离屏渲染却复现不出来 —— 两条路径的深度处理不同)。收到 600:1。
+    # shadowsize/offsamples 同步降一档, 减轻驱动压力, 视觉上几乎无差别。
+    ET.SubElement(vis, 'quality', shadowsize='2048', offsamples='4')
+    ET.SubElement(vis, 'map', znear='0.05', zfar='30')
     # 离屏帧缓冲默认 640x480, 超过就报错。放大以便截图/录像/相机传感器取图。
     ET.SubElement(vis, 'global', offwidth='1920', offheight='1080')
 
@@ -221,7 +225,7 @@ def build():
                   rgb1='0.30 0.32 0.35', rgb2='0.36 0.38 0.41',
                   width='512', height='512')
     ET.SubElement(asset, 'material', name='ground', texture='grid',
-                  texrepeat='24 24', texuniform='true', reflectance='0.05')
+                  texrepeat='24 24', texuniform='true', reflectance='0')
     for name, (rgba, spec, shin, refl) in MATERIALS.items():
         ET.SubElement(asset, 'material', name=name, rgba=fmt(rgba),
                       specular=str(spec), shininess=str(shin), reflectance=str(refl))

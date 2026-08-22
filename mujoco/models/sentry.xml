@@ -6,14 +6,14 @@
   <visual>
     <headlight ambient="0.45 0.45 0.45" diffuse="0.55 0.55 0.55" specular="0.2 0.2 0.2"/>
     <rgba haze="0.87 0.90 0.94 1"/>
-    <quality shadowsize="4096" offsamples="8"/>
-    <map znear="0.01" zfar="60"/>
+    <quality shadowsize="2048" offsamples="4"/>
+    <map znear="0.05" zfar="30"/>
     <global offwidth="1920" offheight="1080"/>
   </visual>
   <asset>
     <texture type="skybox" builtin="gradient" rgb1="0.62 0.68 0.76" rgb2="0.86 0.89 0.93" width="512" height="512"/>
     <texture name="grid" type="2d" builtin="checker" rgb1="0.30 0.32 0.35" rgb2="0.36 0.38 0.41" width="512" height="512"/>
-    <material name="ground" texture="grid" texrepeat="24 24" texuniform="true" reflectance="0.05"/>
+    <material name="ground" texture="grid" texrepeat="24 24" texuniform="true" reflectance="0"/>
     <material name="fiberglass" rgba="0.021 0.023 0.025 1" specular="0.15" shininess="0.25" reflectance="0.02"/>
     <material name="carbon" rgba="0.013 0.014 0.016 1" specular="0.3" shininess="0.45" reflectance="0.05"/>
     <material name="printed" rgba="0.03 0.031 0.034 1" specular="0.08" shininess="0.12" reflectance="0.0"/>
