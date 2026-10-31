@@ -146,7 +146,7 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- MID360 水平倒置, 外壳与扫描坐标系同步安装. -->
+  <!-- MID360 水平倒置, 大yaw为0时+X与底盘+X同向; 外壳与扫描坐标系同步安装. -->
   <link name="livox_lidar">
     <visual name="housing">
       <origin xyz="-0.043315242828 -0.112534453377 -0.308285641154" rpy="1.211343044716 1.007311435550 1.152522436476"/>
@@ -156,7 +156,7 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="lidar_mount_link"/>
     <child link="livox_lidar"/>
-    <origin xyz="0 0 0.5000" rpy="3.141592653589793 0 -1.3521"/>
+    <origin xyz="0 0 0.5000" rpy="3.141592653589793 0 0"/>
   </joint>
 
   <!-- 小yaw -->

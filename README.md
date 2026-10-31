@@ -277,13 +277,40 @@ RGL 源码目录或 RGL 的 install 目录。pattern 默认使用本包自带的
 哨兵 CAD 原网格将 MID360 外壳并入云台，射线会先命中自身外壳并被近距过滤。
 现将其精确拆为 `gimbal_link_structure.glb` 与 `mid360_housing.glb`，
 外壳 visual 挂在 `livox_lidar` 下供 RGL 忽略，URDF 同样使用分离后的结构网格，避免出现两个雷达。
-雷达当前位于大 yaw 坐标系 `(0, 0, 0.5000) m`，即大 yaw 轴线正上方；短悬臂约 216 mm，roll 为 π，保持原 yaw：
-传感器 +Z 朝下，外壳、扫描、IMU 与 TF 一起翻转。新增短悬臂包含可见几何、碰撞体和估计惯量，
+雷达当前位于大 yaw 坐标系 `(0, 0, 0.5000) m`，即大 yaw 轴线正上方；短悬臂约 216 mm，安装 RPY 为 `(π, 0, 0)`。
+传感器 +Z 朝下，大 yaw 为 0 时雷达 +X 与底盘 +X 同向；外壳、扫描、IMU 与 TF 保持一致。
+雷达仍随大 yaw 转动，使用雷达里程计估计底盘朝向时，需结合实时 `base_link → livox_lidar` TF 换算。
+新增短悬臂包含可见几何、碰撞体和估计惯量，
 其遮挡会参与射线求交；不能保证完全没有车体遮挡。RViz 应使用 `base_link` 查看，
 若使用 `livox_lidar` 作 Fixed Frame，倒置坐标系会使地面看起来翻转。
 重新导出云台 CAD 后运行 `python3 scripts/cad/split_mid360_visual.py`，再构建。
 
 构建方式与预设说明参考 [RGLGazeboPlugin 官方文档](https://github.com/RobotecAI/RGLGazeboPlugin)。
+
+## 常用命令
+运行Gazebo仿真：
+```
+source /opt/ros/jazzy/setup.bash
+source /home/rm-young/rm_sim_26/install/setup.bash
+ros2 launch rm_sim_26 rmuc_sim.launch.py
+```
+
+键盘操作车体运动:
+```
+source /opt/ros/jazzy/setup.bash
+source /home/rm-young/rm_sim_26/install/setup.bash
+
+ros2 run teleop_twist_keyboard teleop_twist_keyboard \
+  --ros-args -p speed:=0.2 -p turn:=0.3
+```
+
+运行rviz:
+```
+source /opt/ros/jazzy/setup.bash
+source /home/rm-young/rm_sim_26/install/setup.bash
+rviz2 --ros-args -p use_sim_time:=true
+```
+
 
 ## TODO
 
