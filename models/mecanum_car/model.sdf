@@ -498,14 +498,14 @@
       <sensor name="RGLLidar" type="custom">
         <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
           <range>
-            <min>0.05</min>
-            <max>245</max>
+            <min>0.1</min>
+            <max>40</max>
           </range>
           <update_rate>10</update_rate>
           <update_on_paused_sim>false</update_on_paused_sim>
           <topic>livox/lidar</topic>
           <frame>livox_lidar</frame>
-          <pattern_preset_path>__RM_SIM_26_PATTERN_PRESET_PATH__</pattern_preset_path>
+          <pattern_preset>Livox Mid360</pattern_preset>
         </plugin>
       </sensor>
 
@@ -514,7 +514,7 @@
         <update_rate>100</update_rate>
         <always_on>true</always_on>
         <topic>/livox/imu</topic>
-        <frame>livox_lidar</frame>
+        <gz_frame_id>livox_lidar</gz_frame_id>
         <imu>
           <angular_velocity>
             <x><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></x>
@@ -723,6 +723,9 @@
     <!-- Pose Publisher for TF -->
     <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
       <publish_link_pose>true</publish_link_pose>
+      <publish_model_pose>true</publish_model_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <update_frequency>50</update_frequency>
       <publish_collision_pose>false</publish_collision_pose>
       <publish_visual_pose>false</publish_visual_pose>
       <publish_nested_model_pose>true</publish_nested_model_pose>

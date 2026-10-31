@@ -11,7 +11,7 @@
     大yaw: DM4310+同步带, 滑环供电 -> continuous
     小yaw: GM6020 直驱, 轴前置58.5mm
     pitch: DM4310+连杆, 铰点在小yaw原点上方169mm, 限位为估计值(待实测校准)
-    mid360: 斜装60°(CAD设计值), 挂大yaw回转层
+    mid360: 水平倒置, 经新增简化悬臂挂大yaw回转层 (仿真改装)
   质量来源分三档, 各 link 注释里标明:
     a) CAD 精确值 —— SW 质量属性(已验证是关于质心的), 结构件材料设置正确(板材ρ=2000玻纤)
     b) 实物规格修正 —— CAD 中密度=1000kg/m³ 者为 SW 未赋材料, 按外购件规格补足:
@@ -166,7 +166,7 @@
       <visual name="gimbal_visual">
         <pose>0 0 0 1.5708 0 0</pose>
         <geometry>
-          <mesh><uri>model://sentry/meshes/gimbal_link.glb</uri></mesh>
+          <mesh><uri>model://sentry/meshes/gimbal_link_structure.glb</uri></mesh>
         </geometry>
       </visual>
       <collision name="gimbal_collision">
@@ -187,11 +187,76 @@
       </axis>
     </joint>
 
-    <!-- mid360: 挂回转层, 斜装60° (CAD设计值), 位姿由总装提取.
-         注意: 传感器原点取 Livox CAD 装配原点, 与光学中心可能有 <50mm 偏移, 待实测校准.
-         视觉模型已包含在 gimbal_link.glb 内, 此 link 不重复放 visual. -->
+    <!-- 简化铝制短悬臂: 固定在大yaw层, 在回转轴正上方吊装雷达; 尺寸/质量为仿真估计, 非CAD实测. -->
+    <link name="lidar_mount_link">
+      <pose relative_to="gimbal_link">0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0.0986210301024 -0.029538666021 0.522034294653 0 0 0</pose>
+        <mass>0.356946740101</mass>
+        <inertia>
+          <ixx>0.00155461340212</ixx><iyy>0.00420495864451</iyy><izz>0.00326410075803</izz>
+          <ixy>0.000872224208629</ixy><ixz>0.000919113921551</ixz><iyz>-0.000275290160078</iyz>
+        </inertia>
+      </inertial>
+      <visual name="mount_foot_visual">
+        <pose>0.207 -0.062 0.354 0 0 0</pose>
+        <geometry><box><size>0.028 0.03 0.004</size></box></geometry>
+        <material><ambient>0.25 0.27 0.30 1</ambient><diffuse>0.45 0.48 0.52 1</diffuse></material>
+      </visual>
+      <collision name="mount_foot_collision">
+        <pose>0.207 -0.062 0.354 0 0 0</pose>
+        <geometry><box><size>0.028 0.03 0.004</size></box></geometry>
+      </collision>
+      <visual name="mount_post_visual">
+        <pose>0.207 -0.062 0.464 0 0 0</pose>
+        <geometry><box><size>0.012 0.014 0.216</size></box></geometry>
+        <material><ambient>0.25 0.27 0.30 1</ambient><diffuse>0.45 0.48 0.52 1</diffuse></material>
+      </visual>
+      <collision name="mount_post_collision">
+        <pose>0.207 -0.062 0.464 0 0 0</pose>
+        <geometry><box><size>0.012 0.014 0.216</size></box></geometry>
+      </collision>
+      <visual name="mount_arm_visual">
+        <pose>0.1035 -0.031 0.566 0 0 -0.291013532096</pose>
+        <geometry><box><size>0.216085631174 0.018 0.012</size></box></geometry>
+        <material><ambient>0.25 0.27 0.30 1</ambient><diffuse>0.45 0.48 0.52 1</diffuse></material>
+      </visual>
+      <collision name="mount_arm_collision">
+        <pose>0.1035 -0.031 0.566 0 0 -0.291013532096</pose>
+        <geometry><box><size>0.216085631174 0.018 0.012</size></box></geometry>
+      </collision>
+      <visual name="mount_spacer_visual">
+        <pose>0 0 0.545 0 0 0</pose>
+        <geometry><box><size>0.026 0.026 0.03</size></box></geometry>
+        <material><ambient>0.25 0.27 0.30 1</ambient><diffuse>0.45 0.48 0.52 1</diffuse></material>
+      </visual>
+      <collision name="mount_spacer_collision">
+        <pose>0 0 0.545 0 0 0</pose>
+        <geometry><box><size>0.026 0.026 0.03</size></box></geometry>
+      </collision>
+      <visual name="mount_plate_visual">
+        <pose>0 0 0.528 0 0 0</pose>
+        <geometry><box><size>0.08 0.08 0.004</size></box></geometry>
+        <material><ambient>0.25 0.27 0.30 1</ambient><diffuse>0.45 0.48 0.52 1</diffuse></material>
+      </visual>
+      <collision name="mount_plate_collision">
+        <pose>0 0 0.528 0 0 0</pose>
+        <geometry><box><size>0.08 0.08 0.004</size></box></geometry>
+      </collision>
+    </link>
+    <joint name="lidar_mount_joint" type="fixed">
+      <parent>gimbal_link</parent><child>lidar_mount_link</child>
+    </joint>
+
+    <!-- MID360 水平倒置: +Z 朝下, 扫描与内置IMU共用该坐标系.
+         保留 CAD 原始装配原点定义, 光学中心偏移仍待标定. -->
     <link name="livox_lidar">
-      <pose relative_to="gimbal_link">-0.1963 -0.0880 0.2516 1.0472 0 -1.3521</pose>
+      <pose relative_to="lidar_mount_link">0 0 0.5000 3.141592653589793 0 -1.3521</pose>
+      <visual name="housing">
+        <!-- 将原CAD装配坐标转换为雷达局部坐标, 外壳随传感器一起翻转和平移. -->
+        <pose>-0.043315242828 -0.112534453377 -0.308285641154 1.211343044716 1.007311435550 1.152522436476</pose>
+        <geometry><mesh><uri>model://sentry/meshes/mid360_housing.glb</uri></mesh></geometry>
+      </visual>
       <!-- 实物规格 265 g (CAD 模型仅 52.6 g, 未赋材料) -->
       <inertial>
         <mass>0.265</mass>
@@ -202,14 +267,14 @@
       <sensor name="RGLLidar" type="custom">
         <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
           <range>
-            <min>0.05</min>
-            <max>245</max>
+            <min>0.1</min>
+            <max>40</max>
           </range>
           <update_rate>10</update_rate>
           <update_on_paused_sim>false</update_on_paused_sim>
           <topic>livox/lidar</topic>
           <frame>livox_lidar</frame>
-          <pattern_preset_path>__RM_SIM_26_PATTERN_PRESET_PATH__</pattern_preset_path>
+          <pattern_preset>Livox Mid360</pattern_preset>
         </plugin>
       </sensor>
 
@@ -218,7 +283,7 @@
         <update_rate>100</update_rate>
         <always_on>true</always_on>
         <topic>/livox/imu</topic>
-        <frame>livox_lidar</frame>
+        <gz_frame_id>livox_lidar</gz_frame_id>
         <imu>
           <angular_velocity>
             <x><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></x>
@@ -234,7 +299,7 @@
       </sensor>
     </link>
     <joint name="lidar_joint" type="fixed">
-      <parent>gimbal_link</parent>
+      <parent>lidar_mount_link</parent>
       <child>livox_lidar</child>
     </joint>
 
@@ -295,7 +360,7 @@
         <update_rate>200</update_rate>
         <always_on>true</always_on>
         <topic>/gimbal/imu</topic>
-        <frame>gimbal_imu</frame>
+        <gz_frame_id>gimbal_imu</gz_frame_id>
       </sensor>
     </link>
     <joint name="pitch_joint" type="revolute">
@@ -365,6 +430,9 @@
 
     <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
       <publish_link_pose>true</publish_link_pose>
+      <publish_model_pose>true</publish_model_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <update_frequency>50</update_frequency>
       <publish_collision_pose>false</publish_collision_pose>
       <publish_visual_pose>false</publish_visual_pose>
       <publish_nested_model_pose>true</publish_nested_model_pose>

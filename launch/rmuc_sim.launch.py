@@ -1,5 +1,7 @@
+"""Launch the robot simulation using map and sensor settings from YAML."""
+
 import os
-import re
+from pathlib import Path
 import tempfile
 
 import yaml
@@ -8,6 +10,7 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
+    OpaqueFunction,
     SetEnvironmentVariable,
     TimerAction,
 )
@@ -16,7 +19,26 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def generate_launch_description():
+def find_rgl_plugin_paths(root_hint):
+    """Accept a workspace, RGL source directory, or RGL install directory."""
+    root = Path(root_hint).expanduser().resolve()
+    for prefix in (root / "external/RGLGazeboPlugin/install", root / "install", root):
+        system = prefix / "RGLServerPlugin"
+        if all((system / name).is_file() for name in (
+            "libRGLServerPluginManager.so",
+            "libRGLServerPluginInstance.so",
+            "libRobotecGPULidar.so",
+        )):
+            return str(system), str(prefix / "RGLVisualize")
+    return "", "" #返回两个空字符串
+
+
+def _join_env_path(variable_name, *extra_paths):
+    paths = [*extra_paths, os.environ.get(variable_name, "")]
+    return ":".join(path for path in paths if path)
+
+
+def _launch_setup(context):
     def _has_nvidia_ml():
         candidates = [
             "/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1",
@@ -42,6 +64,8 @@ def generate_launch_description():
 
     def _load_sim_config(config_path):
         default_config = {
+            "map_year": 2026,
+            "maps": {},
             "robot_model": "sentry",
             "lidar_mode": "auto",
             "rgl_plugin_root": "",
@@ -75,8 +99,7 @@ def generate_launch_description():
     def _determine_use_rgl(lidar_mode, has_nvidia):
         if lidar_mode == "rgl":
             if not has_nvidia:
-                print("[WARN] lidar_mode设置为'rgl'但未检测到NVIDIA显卡，强制切换为gpu_lidar")
-                return False
+                raise RuntimeError("RGL模式需要可用的NVIDIA驱动，未检测到libnvidia-ml.so.1")
             return True
         if lidar_mode == "gpu_lidar":
             return False
@@ -132,18 +155,9 @@ def generate_launch_description():
             "</sensor>\n"
         )
 
-    def _write_runtime_model(src_path, lidar_config, use_rgl, pattern_path):
+    def _write_runtime_model(src_path, lidar_config, use_rgl):
         content = _read_text(src_path)
         if use_rgl:
-            content, replacements = re.subn(
-                r"<pattern_preset_path>.*?</pattern_preset_path>",
-                f"<pattern_preset_path>{pattern_path}</pattern_preset_path>",
-                content,
-                count=1,
-                flags=re.DOTALL,
-            )
-            if replacements == 0:
-                print("[WARN] 未找到pattern_preset_path标签，将继续使用原始模型文件")
             return _write_temp_file(content, ".sdf", "rm_sim_26_model_rgl_")
 
         sensor_start = content.find('<sensor name="RGLLidar" type="custom">')
@@ -157,20 +171,37 @@ def generate_launch_description():
                 )
         return _write_temp_file(content, ".sdf", "rm_sim_26_model_gpu_lidar_")
 
-    def _join_env_path(variable_name, *extra_paths):
-        paths = [os.environ.get(variable_name, "")]
-        paths.extend(extra_paths)
-        return ":".join(path for path in paths if path)
-
     package_name = "rm_sim_26"
     pkg_share_path = get_package_share_directory(package_name)
-    world_file = os.path.join(pkg_share_path, "worlds", "rmuc_2025_world.world")
     pattern_file_path = os.path.join(
         pkg_share_path, "plugin", "LivoxMid360.mat3x4f"
     )
 
-    config_path = os.path.join(pkg_share_path, "config", "sim_config.yaml")
+    config_path = LaunchConfiguration("config_file").perform(context)
     sim_config = _load_sim_config(config_path)
+    map_year = str(sim_config["map_year"])
+    maps = sim_config["maps"]
+    if map_year not in maps:
+        available = ", ".join(maps) or "无"
+        raise ValueError(f"未知 map_year '{map_year}'，YAML 中可选地图: {available}")
+    map_config = maps[map_year]
+    world_file = os.path.join(pkg_share_path, "worlds", map_config["world"])
+    if not os.path.isfile(world_file):
+        raise FileNotFoundError(f"地图文件不存在: {world_file}")
+    spawn_position = {
+        axis: LaunchConfiguration(f"spawn_{axis}").perform(context)
+        or str(map_config["spawn"][axis])
+        for axis in ("x", "y", "z")
+    }
+    print(f"[INFO] 场地: RMUC {map_year} ({world_file})")
+    print(f"[INFO] 出生点: {spawn_position}")
+    lidar_override = LaunchConfiguration("lidar_mode").perform(context)
+    if lidar_override:
+        if lidar_override not in ("auto", "rgl", "gpu_lidar"):
+            raise ValueError("lidar_mode must be auto, rgl or gpu_lidar")
+        sim_config["lidar_mode"] = lidar_override
+    if sim_config["lidar_mode"] not in ("auto", "rgl", "gpu_lidar"):
+        raise ValueError("lidar_mode must be auto, rgl or gpu_lidar")
 
     robot_model = sim_config.get("robot_model", "sentry")
     if robot_model not in ("sentry", "mecanum_car"):
@@ -191,54 +222,40 @@ def generate_launch_description():
     has_nvidia = _has_nvidia_ml()
     use_rgl = _determine_use_rgl(sim_config["lidar_mode"], has_nvidia)
 
-    source_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    if not os.path.isdir(os.path.join(source_root, "external", "RGLGazeboPlugin")):
-        source_root = ""
-
-    rgl_root_from_config = sim_config.get("rgl_plugin_root", "")
-    rgl_root = ""
+    rgl_system_plugin, rgl_gui_plugin = "", ""
     if use_rgl:
-        rgl_root = os.environ.get(
-            "RGL_GZ_PLUGIN_ROOT", rgl_root_from_config or source_root
-        )
+        root_hint = os.environ.get("RGL_GZ_PLUGIN_ROOT") or sim_config.get("rgl_plugin_root")
+        roots = [root_hint] if root_hint else Path(__file__).resolve().parents
+        for root in roots:
+            rgl_system_plugin, rgl_gui_plugin = find_rgl_plugin_paths(root)
+            if rgl_system_plugin:
+                break
 
-    rgl_system_plugin = (
-        os.path.join(
-            rgl_root, "external", "RGLGazeboPlugin", "install", "RGLServerPlugin"
-        )
-        if rgl_root
-        else ""
-    )
-    rgl_gui_plugin = (
-        os.path.join(
-            rgl_root, "external", "RGLGazeboPlugin", "install", "RGLVisualize"
-        )
-        if rgl_root
-        else ""
-    )
-    patterns_dir_fallback = (
-        os.path.join(rgl_root, "external", "RGLGazeboPlugin", "lidar_patterns")
-        if rgl_root
-        else ""
-    )
-
-    if use_rgl and not os.path.isdir(rgl_system_plugin):
-        print(
-            "[WARN] 未找到RGL系统插件目录，自动切换为gpu_lidar: "
-            f"{rgl_system_plugin or '(empty)'}"
-        )
+    if use_rgl and not rgl_system_plugin:
+        message = "未找到完整RGL插件安装；请编译 external/RGLGazeboPlugin，或设置 RGL_GZ_PLUGIN_ROOT"
+        if sim_config["lidar_mode"] == "rgl":
+            raise RuntimeError(message)
+        print(f"[WARN] {message}，自动切换为gpu_lidar")
         use_rgl = False
-    if use_rgl and not os.path.isfile(pattern_file_path):
-        print(
-            "[WARN] 未找到Livox Mid360 pattern文件，自动切换为gpu_lidar: "
-            f"{pattern_file_path}"
-        )
+
+    rgl_patterns_dir = os.environ.get("RGL_PATTERNS_DIR") or os.path.dirname(pattern_file_path)
+    preset_file = os.path.join(rgl_patterns_dir, "LivoxMid360.mat3x4f")
+    if use_rgl and (not os.path.isfile(preset_file) or
+                    os.path.getsize(preset_file) == 0 or
+                    os.path.getsize(preset_file) % (48 * 40) != 0):
+        message = f"MID360交替扫描pattern缺失或格式错误: {preset_file}"
+        if sim_config["lidar_mode"] == "rgl":
+            raise RuntimeError(message)
+        print(f"[WARN] {message}，自动切换为gpu_lidar")
         use_rgl = False
 
     print(f"[INFO] 配置文件: {config_path}")
     print(f"[INFO] lidar_mode设置: {sim_config['lidar_mode']}")
     print(f"[INFO] 检测到NVIDIA显卡: {has_nvidia}")
     print(f"[INFO] 雷达仿真模式: {'RGL (NVIDIA)' if use_rgl else 'gpu_lidar (通用)'}")
+    if use_rgl:
+        print(f"[INFO] RGL插件: {rgl_system_plugin}")
+        print(f"[INFO] Livox Mid360: 40帧交替pattern，{os.path.getsize(preset_file) // (48 * 40)}条射线/帧，10 Hz")
 
     set_gazebo_resource_path = SetEnvironmentVariable(
         name="GZ_SIM_RESOURCE_PATH",
@@ -263,25 +280,13 @@ def generate_launch_description():
         ),
     )
 
-    rgl_patterns_dir = ""
-    if use_rgl:
-        rgl_patterns_dir = os.environ.get("RGL_PATTERNS_DIR", patterns_dir_fallback)
-        if rgl_patterns_dir and not os.path.isdir(rgl_patterns_dir):
-            print(
-                "[WARN] RGL_PATTERNS_DIR不存在，将跳过该环境变量: "
-                f"{rgl_patterns_dir}"
-            )
-            rgl_patterns_dir = ""
     set_rgl_patterns_dir = (
         SetEnvironmentVariable(name="RGL_PATTERNS_DIR", value=rgl_patterns_dir)
-        if rgl_patterns_dir
+        if use_rgl
         else None
     )
 
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
-    declare_use_sim_time = DeclareLaunchArgument(
-        "use_sim_time", default_value="true", description="Use simulation time"
-    )
 
     if not use_rgl:
         world_file = _write_fallback_world(world_file)
@@ -289,9 +294,10 @@ def generate_launch_description():
         robot_model_path,
         sim_config["livox_mid360"],
         use_rgl,
-        pattern_file_path,
     )
 
+    headless = LaunchConfiguration("headless").perform(context).lower() == "true"
+    gazebo_options = "-s --headless-rendering " if headless else ""
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -301,7 +307,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "gz_args": f"-r -v 4 {world_file}",
+            "gz_args": f"{gazebo_options}-r -v 3 {world_file}",
             "on_exit_shutdown": "true",
         }.items(),
     )
@@ -317,6 +323,7 @@ def generate_launch_description():
         ],
     )
 
+    # Use the selected map's spawn position, with optional launch overrides.
     spawn_robot = Node(
         package="ros_gz_sim",
         executable="create",
@@ -326,11 +333,11 @@ def generate_launch_description():
             "-name",
             robot_name,
             "-x",
-            "3.4",
+            spawn_position["x"],
             "-y",
-            "9.5",
+            spawn_position["y"],
             "-z",
-            "0.3",
+            spawn_position["z"],
             "-R",
             "0.0",
             "-P",
@@ -353,7 +360,7 @@ def generate_launch_description():
     cmd_vel_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=["/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist"],
+        arguments=["/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist"],
         output="screen",
     )
 
@@ -362,7 +369,7 @@ def generate_launch_description():
             package="ros_gz_bridge",
             executable="parameter_bridge",
             arguments=[
-                "/livox/lidar@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
+                "/livox/lidar@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked"
             ],
             output="screen",
         )
@@ -372,49 +379,23 @@ def generate_launch_description():
             executable="parameter_bridge",
             name="lidar_bridge_node",
             arguments=[
-                "/gz_lidar_points/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
+                "/gz_lidar_points/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked"
             ],
             remappings=[("/gz_lidar_points/points", "/livox/lidar")],
-            output="screen",
-        )
-
-    lidar_frame_transform = None
-    if not use_rgl:
-        lidar_frame_transform = Node(
-            package="tf2_ros",
-            executable="static_transform_publisher",
-            arguments=[
-                "--x",
-                "0",
-                "--y",
-                "0",
-                "--z",
-                "0",
-                "--roll",
-                "0",
-                "--pitch",
-                "0",
-                "--yaw",
-                "0",
-                "--frame-id",
-                "livox_lidar",
-                "--child-frame-id",
-                f"{robot_name}/livox_lidar/livox_lidar",
-            ],
             output="screen",
         )
 
     imu_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=["/livox/imu@sensor_msgs/msg/Imu@gz.msgs.IMU"],
+        arguments=["/livox/imu@sensor_msgs/msg/Imu[gz.msgs.IMU"],
         output="screen",
     )
 
     chassis_imu_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=["/chassis/imu@sensor_msgs/msg/Imu@gz.msgs.IMU"],
+        arguments=["/chassis/imu@sensor_msgs/msg/Imu[gz.msgs.IMU"],
         output="screen",
     )
 
@@ -432,7 +413,7 @@ def generate_launch_description():
         executable="parameter_bridge",
         name="gimbal_cmd_bridge",
         arguments=[
-            f"{topic}@std_msgs/msg/Float64@gz.msgs.Double" for topic in gimbal_topics
+            f"{topic}@std_msgs/msg/Float64]gz.msgs.Double" for topic in gimbal_topics
         ],
         output="screen",
     )
@@ -446,7 +427,7 @@ def generate_launch_description():
             executable="parameter_bridge",
             name="wheel_cmd_bridge",
             arguments=[
-                f"/{wheel}/cmd_vel@std_msgs/msg/Float64@gz.msgs.Double"
+                f"/{wheel}/cmd_vel@std_msgs/msg/Float64]gz.msgs.Double"
                 for wheel in ("wheel_fl", "wheel_rl", "wheel_rr", "wheel_fr")
             ],
             output="screen",
@@ -465,14 +446,14 @@ def generate_launch_description():
             package="ros_gz_bridge",
             executable="parameter_bridge",
             name="gimbal_imu_bridge",
-            arguments=["/gimbal/imu@sensor_msgs/msg/Imu@gz.msgs.IMU"],
+            arguments=["/gimbal/imu@sensor_msgs/msg/Imu[gz.msgs.IMU"],
             output="screen",
         )
 
     camera_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=["/camera@sensor_msgs/msg/Image@gz.msgs.Image"],
+        arguments=["/camera@sensor_msgs/msg/Image[gz.msgs.Image"],
         output="screen",
     )
 
@@ -480,15 +461,16 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=[
-            f"/model/{robot_name}/pose@geometry_msgs/msg/PoseStamped@gz.msgs.Pose"
+            f"/model/{robot_name}/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V"
         ],
+        remappings=[(f"/model/{robot_name}/pose", "/ground_truth/poses")],
         output="screen",
     )
 
     joint_state_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=["/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model"],
+        arguments=["/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model"],
         output="screen",
     )
 
@@ -498,7 +480,6 @@ def generate_launch_description():
         set_gazebo_resource_path,
         set_gz_plugin_path,
         set_gz_gui_plugin_path,
-        declare_use_sim_time,
         gazebo_launch,
         robot_state_publisher,
         delayed_spawn,
@@ -515,10 +496,40 @@ def generate_launch_description():
 
     if set_rgl_patterns_dir is not None:
         launch_actions.insert(3, set_rgl_patterns_dir)
-    if lidar_frame_transform is not None:
-        launch_actions.append(lidar_frame_transform)
     for optional_node in (wheel_bridge, omni_drive, gimbal_imu_bridge):
         if optional_node is not None:
             launch_actions.append(optional_node)
 
-    return LaunchDescription(launch_actions)
+    return launch_actions
+
+
+def generate_launch_description():
+    pkg_share = get_package_share_directory("rm_sim_26")
+    return LaunchDescription([
+        DeclareLaunchArgument("use_sim_time", default_value="true"),
+        DeclareLaunchArgument(
+            "config_file",
+            default_value=os.path.join(pkg_share, "config", "sim_config.yaml"),
+        ),
+        DeclareLaunchArgument(
+            "lidar_mode", default_value="",
+            description="Override YAML: auto, rgl or gpu_lidar",
+        ),
+        DeclareLaunchArgument(
+            "headless", default_value="false",
+            description="Run server with headless rendering and no GUI",
+        ),
+        DeclareLaunchArgument(
+            "spawn_x", default_value="",
+            description="Override the selected map's YAML spawn x coordinate",
+        ),
+        DeclareLaunchArgument(
+            "spawn_y", default_value="",
+            description="Override the selected map's YAML spawn y coordinate",
+        ),
+        DeclareLaunchArgument(
+            "spawn_z", default_value="",
+            description="Override the selected map's YAML spawn z coordinate",
+        ),
+        OpaqueFunction(function=_launch_setup),
+    ])

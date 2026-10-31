@@ -1,19 +1,32 @@
 # RM_SIM_26 仿真配置文件
 # Simulation Configuration
 
+# 场地年份：改为 2025 或 2026；统一从 rmuc_sim.launch.py 启动
+map_year: 2026
+
+# 各场地资源与出生点（单位 m）
+maps:
+  "2025":
+    world: "rmuc_2025_world.world"
+    spawn: {x: 3.4, y: 9.5, z: 0.3}
+  "2026":
+    world: "RMUC2026_world.world"
+    # 社区场地在 (-10, 0) 处的上表面约为 z=0.358656 m
+    spawn: {x: -10.0, y: 0.0, z: 0.65}
+
 # 机器人模型
 # robot_model: "sentry"      - 26赛季哨兵(全向轮+三轴云台, CAD实测几何)
 # robot_model: "mecanum_car" - 旧麦轮测试车(保留)
 robot_model: "sentry"
 
 # 雷达仿真模式
-# lidar_mode: "rgl"     - 使用RGL插件模拟Mid360 (需要NVIDIA显卡)
+# lidar_mode: "rgl"     - 严格使用RGL MID360预设，缺少驱动/插件时启动报错
 # lidar_mode: "gpu_lidar" - 使用Gazebo内置gpu_lidar (无需NVIDIA显卡)
 # lidar_mode: "auto"    - 自动检测，有NVIDIA显卡则使用rgl，否则使用gpu_lidar
-lidar_mode: "auto"
+lidar_mode: "rgl"
 
 # RGL插件路径配置 (仅lidar_mode为rgl时生效)
-# 留空则自动检测工作区中的RGLGazeboPlugin目录
+# 留空则从启动文件逐级检测工作区；可填工作区、RGL源码或其install目录
 rgl_plugin_root: ""
 
 # Livox Mid360 雷达参数 (仅gpu_lidar模式下使用)
