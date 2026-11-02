@@ -371,6 +371,7 @@ def _launch_setup(context):
             arguments=[
                 "/livox/lidar@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked"
             ],
+            remappings=[("/livox/lidar", "/livox/lidar_raw")],
             output="screen",
         )
     else:
@@ -381,9 +382,17 @@ def _launch_setup(context):
             arguments=[
                 "/gz_lidar_points/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked"
             ],
-            remappings=[("/gz_lidar_points/points", "/livox/lidar")],
+            remappings=[("/gz_lidar_points/points", "/livox/lidar_raw")],
             output="screen",
         )
+
+    livox_custom_bridge = Node(
+        package="rm_sim_26",
+        executable="livox_custom_bridge.py",
+        name="livox_custom_bridge",
+        parameters=[{"use_sim_time": use_sim_time}],
+        output="screen",
+    )
 
     imu_bridge = Node(
         package="ros_gz_bridge",
@@ -486,6 +495,7 @@ def _launch_setup(context):
         clock_bridge,
         cmd_vel_bridge,
         lidar_bridge,
+        livox_custom_bridge,
         imu_bridge,
         chassis_imu_bridge,
         gimbal_bridge,

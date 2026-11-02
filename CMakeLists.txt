@@ -20,7 +20,7 @@ foreach(_dir IN LISTS _install_dirs)
 endforeach()
 
 install(
-  PROGRAMS scripts/omni_drive.py
+  PROGRAMS scripts/omni_drive.py scripts/livox_custom_bridge.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

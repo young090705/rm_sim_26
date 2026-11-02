@@ -37,16 +37,18 @@ lidar_mode: "rgl"
 `rgl` 是严格模式：缺少驱动库、插件或 pattern 时启动报错，不会悄悄切换扫描模型。
 只有 `auto` 模式会回退。安装步骤见下方「RGL 模式准备」。
 
-当前插件输出 `x/y/z/intensity`，没有逐点时间、Livox CustomMsg、扫描运动畸变补偿或
-真实材质反射率/噪声模型；`intensity` 来自场景 LaserRetro 设置。
+当前插件原始输出 `x/y/z/intensity`，没有逐点时间、扫描运动畸变补偿或
+真实材质反射率/噪声模型；`intensity` 来自场景 LaserRetro 设置。仿真启动后由
+`livox_custom_bridge` 转为 `CustomMsg` 发布；由于输入没有逐点时间和线号，`offset_time`
+与 `line` 填 0，`tag` 填 0。
 其精确之处是预设射线方向和场景几何求交，不能宣称与实物所有误差特性一致。
 
 ### 2. gpu_lidar模式 (通用)
 
 使用 Gazebo 内置的 `gpu_lidar`，无需 NVIDIA 显卡，但需要可用的 OpenGL/EGL 渲染环境。
 它按 MID360 的 360° 水平、-7°～52° 垂直视场生成规则扫描点云，
-**不复现 MID360 非重复扫描，不提供逐点时间或 Livox CustomMsg**。
-点云为 `sensor_msgs/msg/PointCloud2`，不是 Livox 驱动的数据包。
+**不复现 MID360 非重复扫描，也没有真实的逐点时间和线号**。Gazebo 原始点云为
+`sensor_msgs/msg/PointCloud2`，启动时会转换为 `livox_ros_driver2/msg/CustomMsg` 发布。
 
 ```yaml
 lidar_mode: "gpu_lidar"
@@ -96,7 +98,8 @@ TF 树：`base_link → gimbal_link(大yaw) → small_yaw_link → pitch_link`�
 |---|---|---|
 | `/cmd_vel` | Twist | 底盘速度，经 `omni_drive` 节点解算为四轮速度 |
 | `/gimbal/big_yaw/cmd_pos`、`/gimbal/small_yaw/cmd_pos`、`/gimbal/pitch/cmd_pos` | Float64 | 云台三轴位置指令 |
-| `/livox/lidar`、`/livox/imu` | PointCloud2、Imu | Mid360 |
+| `/livox/lidar` | `livox_ros_driver2/msg/CustomMsg` | MID-360 仿真点云 |
+| `/livox/imu` | `sensor_msgs/msg/Imu` | MID-360 内置 IMU 加速度、角速度 |
 | `/gimbal/imu` | Imu | 自瞄 IMU（pitch 体） |
 | `/joint_states` | JointState | 7 个关节 |
 | `/ground_truth/poses` | TFMessage | Gazebo 模型和连杆真值位姿，用于检查运动；不自动接入 `/tf` |
@@ -104,6 +107,7 @@ TF 树：`base_link → gimbal_link(大yaw) → small_yaw_link → pitch_link`�
 点云和 Livox IMU 的 `header.frame_id` 均为 `livox_lidar`，时间戳使用仿真时钟。
 默认点云 10 Hz、Livox IMU 100 Hz（仿真时间），实际墙钟频率随实时率变化。
 标准算法订阅点云/IMU 时建议使用 ROS 2 sensor-data QoS。
+启动仿真前需 source 已构建 `livox_ros_driver2` 的 ROS 2 工作区，以提供 `CustomMsg` 消息类型。
 
 ### 云台惯量与参数辨识
 
@@ -266,7 +270,8 @@ ros2 launch rm_sim_26 rmuc_sim.launch.py lidar_mode:=rgl
 
 启动日志应显示 `雷达仿真模式: RGL (NVIDIA)`、插件路径、40 帧交替 pattern，
 并在 Gazebo 日志中显示 `Running on GPU` 和 `Successfully loaded pattern`。
-ROS 发布 `/livox/lidar`（PointCloud2，XYZI）与 `/livox/imu`（Imu）；
+ROS 发布 `/livox/lidar`（`livox_ros_driver2/msg/CustomMsg`）与
+`/livox/imu`（`sensor_msgs/msg/Imu`）；
 `/cmd_vel` 和云台控制接口保持不变。
 
 插件路径自动从启动文件所在目录逐级查找，支持 source 与 install 布局。
