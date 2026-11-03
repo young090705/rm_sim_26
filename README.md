@@ -81,6 +81,10 @@ lidar_mode: "auto"
 
 模型安装关系：`base_link → gimbal_link(大yaw) → small_yaw_link → pitch_link`，雷达安装链为 `gimbal_link → lidar_mount_link → livox_lidar`。`publish_tf` 控制这些内部关系是否发布为 TF，默认关闭。
 
+底盘前方定义为 `base_link` 的 `+X`。CAD 枪口沿云台局部 `+Y`，因此大 yaw 的安装零位绕 Z 轴旋转 `-π/2`。
+当大 yaw、小 yaw 和 pitch 关节均为 `0` 时，枪口朝向与底盘前进方向一致；这项安装旋转在 SDF 和 URDF 中保持一致。
+云台结构、发射组件和随动雷达随该安装旋转一起调整。
+
 网格为 GLB 格式（Onshape 导出即 glTF，GLB 是其二进制封装），保留零件层级与材质。
 
 外观由 `scripts/cad/recolor.py` 生成，两层规则：
@@ -324,7 +328,8 @@ RGL 源码目录或 RGL 的 install 目录。pattern 默认使用本包自带的
 现将其精确拆为 `gimbal_link_structure.glb` 与 `mid360_housing.glb`，
 外壳 visual 挂在 `livox_lidar` 下供 RGL 忽略，URDF 同样使用分离后的结构网格，避免出现两个雷达。
 雷达当前位于大 yaw 坐标系 `(0, 0, 0.5000) m`，即大 yaw 轴线正上方；短悬臂约 216 mm，安装 RPY 为 `(π, 0, 0)`。
-传感器 +Z 朝下，大 yaw 为 0 时雷达 +X 与底盘 +X 同向；外壳、扫描与 IMU 使用一致的安装方向。
+传感器 +Z 朝下；大 yaw 安装零位调整后，关节为 0 时雷达 +X 朝底盘 -Y（右侧），枪口朝底盘 +X。
+雷达相对其支架的安装方向不变，外壳、扫描与 IMU 使用一致的安装方向。
 雷达随大 yaw 转动；若外部算法需要将雷达里程计转换为底盘位姿，应结合安装关系和关节角换算；`publish_tf: true` 可提供机器人内部 TF。
 新增短悬臂包含可见几何、碰撞体和估计惯量，
 其遮挡会参与射线求交；不能保证完全没有车体遮挡。外部点云工具若使用 `livox_lidar` 作参考系，

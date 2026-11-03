@@ -4,7 +4,8 @@
   几何/位姿/质量来源: SolidWorks 总装 烧饼备份11.14 (经 Onshape 解析提取)
 
   坐标约定: ROS Z-up. base_link 原点 = 大yaw回转轴心, 高度取 CAD 原点面(轮心上方20mm),
-  地面在 z=-0.096. 前向 +x = CAD +X.
+  地面在 z=-0.096. 底盘前向 +x = CAD +X.
+  大yaw安装零位绕Z旋转-90度, 将CAD枪口+Y对齐底盘+X; 三轴关节为0时枪口朝前.
 
   关键实测参数:
     全向轮: 直径152mm 宽39mm, 4轮X布局, 安装半径245mm(轮心距轴心), 轮轴沿径向
@@ -177,7 +178,8 @@
       </collision>
     </link>
     <joint name="big_yaw_joint" type="revolute">
-      <pose relative_to="base_link">0 0 0.0845 0 0 0</pose>
+      <!-- CAD枪口沿云台+Y; 安装偏航-π/2使关节零位时枪口沿底盘+X. -->
+      <pose relative_to="base_link">0 0 0.0845 0 0 -1.5707963267948966</pose>
       <parent>base_link</parent>
       <child>gimbal_link</child>
       <axis>
@@ -248,7 +250,8 @@
       <parent>gimbal_link</parent><child>lidar_mount_link</child>
     </joint>
 
-    <!-- MID360 水平倒置: +Z 朝下, 大yaw为0时+X与底盘+X同向; 扫描与内置IMU共用该坐标系.
+    <!-- MID360 水平倒置: +Z 朝下, 随大yaw安装零位旋转后, 大yaw为0时+X朝底盘-Y;
+         扫描与内置IMU共用该坐标系.
          保留 CAD 原始装配原点定义, 光学中心偏移仍待标定. -->
     <link name="livox_lidar">
       <pose relative_to="lidar_mount_link">0 0 0.5000 3.141592653589793 0 0</pose>

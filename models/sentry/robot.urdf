@@ -3,6 +3,7 @@
   哨兵"烧饼"安装关系; publish_tf=true 时由 robot_state_publisher 发布 TF.
   joint 名与 model.sdf 一致.
   坐标: base_link 原点=大yaw轴心(CAD原点面高度, 轮心上方20mm), 地面 z=-0.096.
+  大yaw安装偏航-π/2, 三轴关节为0时CAD枪口+Y对齐底盘+X; 与model.sdf一致.
 -->
 <robot name="sentry">
 
@@ -84,7 +85,7 @@
   <joint name="big_yaw_joint" type="continuous">
     <parent link="base_link"/>
     <child link="gimbal_link"/>
-    <origin xyz="0 0 0.0845" rpy="0 0 0"/>
+    <origin xyz="0 0 0.0845" rpy="0 0 -1.5707963267948966"/>
     <axis xyz="0 0 1"/>
   </joint>
 
