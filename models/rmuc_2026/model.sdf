@@ -20,10 +20,20 @@
           <specular>0.01 0.01 0.01 1</specular>
         </material>
       </visual>
-      <collision name='collision'>
+      <!-- 普通底板用解析 box, 避免轮子直接接触整幅 STL 的三角网格.
+           位姿和尺寸从原底板提取, 上表面世界高度仍为0.358656m. -->
+      <collision name='flat_floor'>
+        <pose>0.02 1.624344 -1.741344 0 0 0</pose>
+        <geometry>
+          <box><size>29.05 16.050001 0.2</size></box>
+        </geometry>
+      </collision>
+      <!-- 去掉底板和毫米级地面标线的碰撞副本; 坡道/台阶/起伏地形保留.
+           外观与雷达继续使用上面的原始 STL. -->
+      <collision name='field_structures'>
         <geometry>
           <mesh>
-            <uri>model://rmuc_2026/meshes/rmuc_2026.stl</uri>
+            <uri>model://rmuc_2026/meshes/rmuc_2026_collision.stl</uri>
             <scale>0.1 0.1 0.1</scale>
           </mesh>
         </geometry>
