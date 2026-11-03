@@ -165,7 +165,68 @@
       <pose>14 9 0 0 0 0</pose>
       <static>true</static>
     </model>
-  
+
+    <!-- 防跌落围墙: 沿 STL 底板外边界布置, 不修改原始场地网格.
+         底板世界坐标: X=[-14.505, 14.545], Y=[-7.400656, 8.649344],
+         上表面 Z=0.358656. 墙厚0.2m, 从底板底面起高2.2m (高出底板2m).
+         墙体中心对齐底板边缘, 两端各延伸0.1m, 使四角重叠闭合. -->
+    <model name='field_boundary_walls'>
+      <static>true</static>
+      <pose>0 0 0.158656 0 0 0</pose>
+      <link name='west_wall'>
+        <pose>-14.505 0.624344 1.1 0 0 0</pose>
+        <collision name='collision'>
+          <geometry><box><size>0.2 16.25 2.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.2 16.25 2.2</size></box></geometry>
+          <material>
+            <ambient>0.25 0.35 0.45 1</ambient>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name='east_wall'>
+        <pose>14.545 0.624344 1.1 0 0 0</pose>
+        <collision name='collision'>
+          <geometry><box><size>0.2 16.25 2.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.2 16.25 2.2</size></box></geometry>
+          <material>
+            <ambient>0.25 0.35 0.45 1</ambient>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name='south_wall'>
+        <pose>0.02 -7.400656 1.1 0 0 0</pose>
+        <collision name='collision'>
+          <geometry><box><size>29.25 0.2 2.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>29.25 0.2 2.2</size></box></geometry>
+          <material>
+            <ambient>0.25 0.35 0.45 1</ambient>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name='north_wall'>
+        <pose>0.02 8.649344 1.1 0 0 0</pose>
+        <collision name='collision'>
+          <geometry><box><size>29.25 0.2 2.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>29.25 0.2 2.2</size></box></geometry>
+          <material>
+            <ambient>0.25 0.35 0.45 1</ambient>
+            <diffuse>0.35 0.45 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
     <model name='speed_bump1'>
       <include>
         <uri>model://speed_bump</uri>

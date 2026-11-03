@@ -250,14 +250,14 @@
       <parent>gimbal_link</parent><child>lidar_mount_link</child>
     </joint>
 
-    <!-- MID360 水平倒置: +Z 朝下, 随大yaw安装零位旋转后, 大yaw为0时+X朝底盘-Y;
-         扫描与内置IMU共用该坐标系.
+    <!-- MID360 按官方坐标定义: +X 背离航空连接器, 水平倒置后+Z朝下.
+         大yaw为0时+X朝底盘+Y; 扫描与内置IMU共用该坐标系.
          保留 CAD 原始装配原点定义, 光学中心偏移仍待标定. -->
     <link name="livox_lidar">
-      <pose relative_to="lidar_mount_link">0 0 0.5000 3.141592653589793 0 0</pose>
+      <pose relative_to="lidar_mount_link">0 0 0.5000 3.141592653589793 0 3.141592653589793</pose>
       <visual name="housing">
-        <!-- 将原CAD装配坐标转换为雷达局部坐标, 外壳随传感器一起翻转和平移. -->
-        <pose>-0.043315242828 -0.112534453377 -0.308285641154 1.211343044716 1.007311435550 1.152522436476</pose>
+        <!-- 补偿雷达坐标系绕Z的180度修正, 保持外壳实际安装位姿不变. -->
+        <pose>0.043315242828 0.112534453377 -0.308285641154 1.211343044716 1.007311435550 -1.989070217113793</pose>
         <geometry><mesh><uri>model://sentry/meshes/mid360_housing.glb</uri></mesh></geometry>
       </visual>
       <!-- 实物规格 265 g (CAD 模型仅 52.6 g, 未赋材料) -->
