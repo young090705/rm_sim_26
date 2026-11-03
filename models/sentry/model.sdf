@@ -376,7 +376,7 @@
     </joint>
 
     <!-- ================= 控制插件 ================= -->
-    <!-- 底盘: 4轮独立速度控制, 逆运动学在 ROS 节点 omni_drive.py 中 (订阅 /cmd_vel) -->
+    <!-- 底盘: 4轮独立速度控制, omni_drive.py 按底盘坐标系指令解算轮速 -->
     <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
       <joint_name>wheel_fl_joint</joint_name>
       <topic>/wheel_fl/cmd_vel</topic>
@@ -428,14 +428,5 @@
       <joint_name>pitch_joint</joint_name>
     </plugin>
 
-    <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
-      <publish_link_pose>true</publish_link_pose>
-      <publish_model_pose>true</publish_model_pose>
-      <use_pose_vector_msg>true</use_pose_vector_msg>
-      <update_frequency>50</update_frequency>
-      <publish_collision_pose>false</publish_collision_pose>
-      <publish_visual_pose>false</publish_visual_pose>
-      <publish_nested_model_pose>true</publish_nested_model_pose>
-    </plugin>
   </model>
 </sdf>

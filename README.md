@@ -79,7 +79,7 @@ lidar_mode: "auto"
 | Mid360 | 水平倒置，通过新增短悬臂**随大 yaw 回转** | 仿真改装，支架为简化估计件 |
 | 自瞄相机/IMU | MV-CA016 与 DM-IMU-L1 均在 pitch 体上 | 装配变换矩阵 |
 
-TF 树：`base_link → gimbal_link(大yaw) → small_yaw_link → pitch_link`，雷达安装链为 `gimbal_link → lidar_mount_link → livox_lidar`。
+模型安装关系：`base_link → gimbal_link(大yaw) → small_yaw_link → pitch_link`，雷达安装链为 `gimbal_link → lidar_mount_link → livox_lidar`。`publish_tf` 控制这些内部关系是否发布为 TF，默认关闭。
 
 网格为 GLB 格式（Onshape 导出即 glTF，GLB 是其二进制封装），保留零件层级与材质。
 
@@ -96,18 +96,59 @@ TF 树：`base_link → gimbal_link(大yaw) → small_yaw_link → pitch_link`�
 
 | 话题 | 类型 | 说明 |
 |---|---|---|
-| `/cmd_vel` | Twist | 底盘速度，经 `omni_drive` 节点解算为四轮速度 |
+| `/cmd_vel` | `geometry_msgs/msg/Twist` | 底盘自身坐标系下的速度，解算四轮速度 |
 | `/gimbal/big_yaw/cmd_pos`、`/gimbal/small_yaw/cmd_pos`、`/gimbal/pitch/cmd_pos` | Float64 | 云台三轴位置指令 |
 | `/livox/lidar` | `livox_ros_driver2/msg/CustomMsg` | MID-360 仿真点云 |
 | `/livox/imu` | `sensor_msgs/msg/Imu` | MID-360 内置 IMU 加速度、角速度 |
 | `/gimbal/imu` | Imu | 自瞄 IMU（pitch 体） |
-| `/joint_states` | JointState | 7 个关节 |
-| `/ground_truth/poses` | TFMessage | Gazebo 模型和连杆真值位姿，用于检查运动；不自动接入 `/tf` |
+| `/joint_states` | JointState | 7 个关节的状态反馈 |
 
 点云和 Livox IMU 的 `header.frame_id` 均为 `livox_lidar`，时间戳使用仿真时钟。
 默认点云 10 Hz、Livox IMU 100 Hz（仿真时间），实际墙钟频率随实时率变化。
 标准算法订阅点云/IMU 时建议使用 ROS 2 sensor-data QoS。
 启动仿真前需 source 已构建 `livox_ros_driver2` 的 ROS 2 工作区，以提供 `CustomMsg` 消息类型。
+
+### 底盘速度控制
+
+向 `/cmd_vel` 发布 `Twist`：`linear.x` 为底盘正前方速度（m/s），
+`linear.y` 为底盘左侧速度（m/s），`angular.z` 为底盘绕向上 Z 轴的角速度（rad/s，逆时针为正）。
+云台自身的位置仍由 `/gimbal/big_yaw/cmd_pos` 控制；速度指令中的 `angular.z` 不控制云台关节。
+`Twist` 没有 `frame_id`，这里通过接口约定使用底盘自身坐标系。
+`omni_drive` 收到指令后直接解算轮速，不依赖云台角度或 `/joint_states`。
+转动大 yaw 不改变同一指令对应的底盘运动方向。
+指令保持到下一条速度指令，停止时发布全零 `Twist`；旧 `mecanum_car` 使用同一速度接口。
+
+### TF 发布开关
+
+在 `config/sim_config.yaml` 中设置（布尔值不要加引号）：
+
+```yaml
+publish_tf: false  # true 发布，false 不发布；默认 false
+```
+
+- `false`：不启动 `robot_state_publisher`，本仿真不发布 `/tf` 或 `/tf_static`。
+- `true`：启动 `robot_state_publisher`，读取所选机器人 URDF 和实际 `/joint_states`。
+  固定关节发布到 `/tf_static`，活动关节发布到 `/tf`，树根为 `base_link`；两个机器人模型均支持。
+
+该开关只控制机器人内部 TF，不提供 `map`、`odom`、`odom_gt` 或 `world` 到 `base_link` 的定位变换。
+两个模型仍使用独立轮速控制，不加载自动发布里程计 TF 的麦轮驱动插件，也不桥接 `/ground_truth/poses`。
+传感器消息中的 `header.frame_id` 保留为坐标系名称，该字段本身不会产生 TF。
+修改后重新构建并重启仿真生效：
+
+```bash
+colcon build --packages-select rm_sim_26
+source install/setup.bash
+ros2 launch rm_sim_26 rmuc_sim.launch.py
+```
+
+```bash
+# 底盘沿自身前方以 0.2 m/s 行驶
+ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist \
+  '{linear: {x: 0.2}, angular: {z: 0.0}}'
+
+# 停止（先结束上面的持续发布）
+ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{}'
+```
 
 ### 云台惯量与参数辨识
 
@@ -224,7 +265,7 @@ ros2 launch rm_sim_26 rmuc_sim.launch.py headless:=true lidar_mode:=gpu_lidar
 在另一终端加载 ROS 和 `install/setup.bash` 后执行：
 
 ```bash
-# 底盘坐标系：x 向前、y 向左，单位 m/s；angular.z 单位 rad/s
+# 底盘坐标系：x 向前、y 向左；angular.z 控制底盘转速
 ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist \
   '{linear: {x: 0.2, y: 0.0}, angular: {z: 0.0}}'
 
@@ -272,7 +313,7 @@ ros2 launch rm_sim_26 rmuc_sim.launch.py lidar_mode:=rgl
 并在 Gazebo 日志中显示 `Running on GPU` 和 `Successfully loaded pattern`。
 ROS 发布 `/livox/lidar`（`livox_ros_driver2/msg/CustomMsg`）与
 `/livox/imu`（`sensor_msgs/msg/Imu`）；
-`/cmd_vel` 和云台控制接口保持不变。
+底盘运动指令使用 `/cmd_vel`，云台关节使用各自的位置控制接口。
 
 插件路径自动从启动文件所在目录逐级查找，支持 source 与 install 布局。
 另行安装时，可将 `RGL_GZ_PLUGIN_ROOT` 或 YAML `rgl_plugin_root` 设为工作区根、
@@ -283,11 +324,11 @@ RGL 源码目录或 RGL 的 install 目录。pattern 默认使用本包自带的
 现将其精确拆为 `gimbal_link_structure.glb` 与 `mid360_housing.glb`，
 外壳 visual 挂在 `livox_lidar` 下供 RGL 忽略，URDF 同样使用分离后的结构网格，避免出现两个雷达。
 雷达当前位于大 yaw 坐标系 `(0, 0, 0.5000) m`，即大 yaw 轴线正上方；短悬臂约 216 mm，安装 RPY 为 `(π, 0, 0)`。
-传感器 +Z 朝下，大 yaw 为 0 时雷达 +X 与底盘 +X 同向；外壳、扫描、IMU 与 TF 保持一致。
-雷达仍随大 yaw 转动，使用雷达里程计估计底盘朝向时，需结合实时 `base_link → livox_lidar` TF 换算。
+传感器 +Z 朝下，大 yaw 为 0 时雷达 +X 与底盘 +X 同向；外壳、扫描与 IMU 使用一致的安装方向。
+雷达随大 yaw 转动；若外部算法需要将雷达里程计转换为底盘位姿，应结合安装关系和关节角换算；`publish_tf: true` 可提供机器人内部 TF。
 新增短悬臂包含可见几何、碰撞体和估计惯量，
-其遮挡会参与射线求交；不能保证完全没有车体遮挡。RViz 应使用 `base_link` 查看，
-若使用 `livox_lidar` 作 Fixed Frame，倒置坐标系会使地面看起来翻转。
+其遮挡会参与射线求交；不能保证完全没有车体遮挡。外部点云工具若使用 `livox_lidar` 作参考系，
+倒置坐标系会使地面看起来翻转；跨坐标系显示所需的变换由外部系统提供。
 重新导出云台 CAD 后运行 `python3 scripts/cad/split_mid360_visual.py`，再构建。
 
 构建方式与预设说明参考 [RGLGazeboPlugin 官方文档](https://github.com/RobotecAI/RGLGazeboPlugin)。
@@ -320,7 +361,7 @@ rviz2 --ros-args -p use_sim_time:=true
 ## TODO
 
 - ✅ 给机器人加入云台结构
-- ✅ 机器人能够发布TF
+- ✅ 底盘自身坐标系速度控制，TF 发布由 YAML 布尔参数控制
 - ✅ 加入比赛场地模型
 - ✅ 实现Mid360的仿真
 - ✅ 支持无NVIDIA显卡的仿真方案

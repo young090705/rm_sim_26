@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  哨兵"烧饼" TF 树 (robot_state_publisher 用).
-  joint 名与 model.sdf 一致, 角度由 gz JointStatePublisher 经 bridge 提供.
+  哨兵"烧饼"安装关系; publish_tf=true 时由 robot_state_publisher 发布 TF.
+  joint 名与 model.sdf 一致.
   坐标: base_link 原点=大yaw轴心(CAD原点面高度, 轮心上方20mm), 地面 z=-0.096.
 -->
 <robot name="sentry">

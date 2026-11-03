@@ -17,6 +17,7 @@ from launch.actions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def find_rgl_plugin_paths(root_hint):
@@ -67,6 +68,7 @@ def _launch_setup(context):
             "map_year": 2026,
             "maps": {},
             "robot_model": "sentry",
+            "publish_tf": False,
             "lidar_mode": "auto",
             "rgl_plugin_root": "",
             "livox_mid360": {
@@ -179,6 +181,10 @@ def _launch_setup(context):
 
     config_path = LaunchConfiguration("config_file").perform(context)
     sim_config = _load_sim_config(config_path)
+    publish_tf = sim_config["publish_tf"]
+    if not isinstance(publish_tf, bool):
+        raise ValueError("publish_tf 必须是 YAML 布尔值 true 或 false（不要加引号）")
+    print(f"[INFO] 机器人内部 TF 发布: {publish_tf}")
     map_year = str(sim_config["map_year"])
     maps = sim_config["maps"]
     if map_year not in maps:
@@ -210,14 +216,9 @@ def _launch_setup(context):
     robot_name = "sentry_bot" if robot_model == "sentry" else "mecanum_bot"
     print(f"[INFO] 机器人模型: {robot_model} (spawn name: {robot_name})")
 
-    robot_urdf_path = os.path.join(
-        pkg_share_path, "models", robot_model, "robot.urdf"
-    )
     robot_model_path = os.path.join(
         pkg_share_path, "models", robot_model, "model.sdf"
     )
-    with open(robot_urdf_path, "r", encoding="utf-8") as urdf_file:
-        robot_description = urdf_file.read()
 
     has_nvidia = _has_nvidia_ml()
     use_rgl = _determine_use_rgl(sim_config["lidar_mode"], has_nvidia)
@@ -312,17 +313,6 @@ def _launch_setup(context):
         }.items(),
     )
 
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        name="robot_state_publisher",
-        output="screen",
-        parameters=[
-            {"use_sim_time": use_sim_time},
-            {"robot_description": robot_description},
-        ],
-    )
-
     # Use the selected map's spawn position, with optional launch overrides.
     spawn_robot = Node(
         package="ros_gz_sim",
@@ -353,14 +343,6 @@ def _launch_setup(context):
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
-        output="screen",
-    )
-
-    # Bridge for cmd_vel topic
-    cmd_vel_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=["/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist"],
         output="screen",
     )
 
@@ -427,27 +409,24 @@ def _launch_setup(context):
         output="screen",
     )
 
-    # 哨兵: 4轮独立驱动, 逆运动学在 omni_drive 节点
-    wheel_bridge = None
-    omni_drive = None
-    if robot_model == "sentry":
-        wheel_bridge = Node(
-            package="ros_gz_bridge",
-            executable="parameter_bridge",
-            name="wheel_cmd_bridge",
-            arguments=[
-                f"/{wheel}/cmd_vel@std_msgs/msg/Float64]gz.msgs.Double"
-                for wheel in ("wheel_fl", "wheel_rl", "wheel_rr", "wheel_fr")
-            ],
-            output="screen",
-        )
-        omni_drive = Node(
-            package="rm_sim_26",
-            executable="omni_drive.py",
-            name="omni_drive",
-            parameters=[{"use_sim_time": use_sim_time}],
-            output="screen",
-        )
+    # Both chassis types use joint velocity controllers, without odometry/TF publishers.
+    wheel_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        name="wheel_cmd_bridge",
+        parameters=[{"config_file": os.path.join(pkg_share_path, "config", "os_gz_omni.yaml")}],
+        output="screen",
+    )
+    omni_drive = Node(
+        package="rm_sim_26",
+        executable="omni_drive.py",
+        name="omni_drive",
+        parameters=[{
+            "use_sim_time": use_sim_time,
+            "drive_type": "omni" if robot_model == "sentry" else "mecanum",
+        }],
+        output="screen",
+    )
 
     gimbal_imu_bridge = None
     if robot_model == "sentry":
@@ -466,16 +445,6 @@ def _launch_setup(context):
         output="screen",
     )
 
-    pose_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=[
-            f"/model/{robot_name}/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V"
-        ],
-        remappings=[(f"/model/{robot_name}/pose", "/ground_truth/poses")],
-        output="screen",
-    )
-
     joint_state_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -490,25 +459,39 @@ def _launch_setup(context):
         set_gz_plugin_path,
         set_gz_gui_plugin_path,
         gazebo_launch,
-        robot_state_publisher,
         delayed_spawn,
         clock_bridge,
-        cmd_vel_bridge,
+        wheel_bridge,
+        omni_drive,
         lidar_bridge,
         livox_custom_bridge,
         imu_bridge,
         chassis_imu_bridge,
         gimbal_bridge,
         camera_bridge,
-        pose_bridge,
         joint_state_bridge,
     ]
 
     if set_rgl_patterns_dir is not None:
         launch_actions.insert(3, set_rgl_patterns_dir)
-    for optional_node in (wheel_bridge, omni_drive, gimbal_imu_bridge):
-        if optional_node is not None:
-            launch_actions.append(optional_node)
+    if gimbal_imu_bridge is not None:
+        launch_actions.append(gimbal_imu_bridge)
+    if publish_tf:
+        robot_urdf_path = os.path.join(
+            pkg_share_path, "models", robot_model, "robot.urdf"
+        )
+        launch_actions.append(Node(
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            name="robot_state_publisher",
+            parameters=[{
+                "use_sim_time": use_sim_time,
+                "robot_description": ParameterValue(
+                    _read_text(robot_urdf_path), value_type=str
+                ),
+            }],
+            output="screen",
+        ))
 
     return launch_actions
 

@@ -19,6 +19,11 @@ maps:
 # robot_model: "mecanum_car" - 旧麦轮测试车(保留)
 robot_model: "sentry"
 
+# 是否发布机器人内部 TF 树（/tf 和 /tf_static），修改后重启仿真
+# true: 发布 base_link 到轮子、云台、传感器的关系；false: 不发布 TF
+# 不包含 map/odom/world 到 base_link 的定位关系
+publish_tf: true
+
 # 雷达仿真模式
 # lidar_mode: "rgl"     - 严格使用RGL MID360预设，缺少驱动/插件时启动报错
 # lidar_mode: "gpu_lidar" - 使用Gazebo内置gpu_lidar (无需NVIDIA显卡)

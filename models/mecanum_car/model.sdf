@@ -678,19 +678,22 @@
 
     <!-- ========== 插件 ========== -->
 
-    <!-- MECANUM DRIVE -->
-    <plugin filename="gz-sim-mecanum-drive-system" name="gz::sim::systems::MecanumDrive">
-      <front_left_joint>front_left_wheel_joint</front_left_joint>
-      <front_right_joint>front_right_wheel_joint</front_right_joint>
-      <back_left_joint>rear_left_wheel_joint</back_left_joint>
-      <back_right_joint>rear_right_wheel_joint</back_right_joint>
-      <wheel_separation>0.42</wheel_separation>
-      <wheelbase>0.40</wheelbase>
-      <wheel_radius>0.076</wheel_radius>
-      <topic>/cmd_vel</topic>
-      <tf_topic>/tf</tf_topic>
-      <frame_id>odom_gt</frame_id>
-      <child_frame_id>body</child_frame_id>
+    <!-- 独立轮速控制: 避免 MecanumDrive 插件自动发布里程计/TF。 -->
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>front_left_wheel_joint</joint_name>
+      <topic>/wheel_fl/cmd_vel</topic>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>rear_left_wheel_joint</joint_name>
+      <topic>/wheel_rl/cmd_vel</topic>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>rear_right_wheel_joint</joint_name>
+      <topic>/wheel_rr/cmd_vel</topic>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <joint_name>front_right_wheel_joint</joint_name>
+      <topic>/wheel_fr/cmd_vel</topic>
     </plugin>
 
     <!-- 云台控制 -->
@@ -718,17 +721,6 @@
       <joint_name>rear_right_wheel_joint</joint_name>
       <joint_name>gimbal_yaw_joint</joint_name>
       <joint_name>gimbal_pitch_joint</joint_name>
-    </plugin>
-
-    <!-- Pose Publisher for TF -->
-    <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
-      <publish_link_pose>true</publish_link_pose>
-      <publish_model_pose>true</publish_model_pose>
-      <use_pose_vector_msg>true</use_pose_vector_msg>
-      <update_frequency>50</update_frequency>
-      <publish_collision_pose>false</publish_collision_pose>
-      <publish_visual_pose>false</publish_visual_pose>
-      <publish_nested_model_pose>true</publish_nested_model_pose>
     </plugin>
 
   </model>
